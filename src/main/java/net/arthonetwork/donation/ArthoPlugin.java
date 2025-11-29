@@ -3,7 +3,7 @@ package net.arthonetwork.donation;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
+
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -12,7 +12,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.List;
 import java.util.Random;
 
-public class ArthoPlugin extends JavaPlugin implements CommandExecutor {
+public class ArthoPlugin extends JavaPlugin {
 
     private List<String> messages;
     private String donationLink;
@@ -52,7 +52,8 @@ public class ArthoPlugin extends JavaPlugin implements CommandExecutor {
         task = new BukkitRunnable() {
             @Override
             public void run() {
-                if (messages.isEmpty()) return;
+                if (messages.isEmpty())
+                    return;
                 String randomMsg = messages.get(new Random().nextInt(messages.size()));
                 String fullMsg = ChatColor.translateAlternateColorCodes('&', randomMsg.replace("%link%", donationLink));
                 Bukkit.broadcastMessage(fullMsg);
