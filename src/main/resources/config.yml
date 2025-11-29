@@ -7,9 +7,9 @@ donation-link: "https://buy.stripe.com/14k8Al4ki5tl8HmfZb"
 # Messages to broadcast. %link% will be replaced by the donation link.
 # Supports color codes with &
 messages:
-  - "&6[ArthoNetwork] &eSoutenez le serveur ! Faites un don ici : &b%link%"
-  - "&d[ArthoNetwork] &5Envie de nous aider ? &dC'est par ici : &e%link%"
-  - "&a[ArthoNetwork] &2Les serveurs ne sont pas gratuits, &aaidez-nous ! &b%link%"
-  - "&c[ArthoNetwork] &4Un petit geste pour le serveur ? &c%link%"
-  - "&9[ArthoNetwork] &3Participez à l'aventure en nous soutenant : &b%link%"
-  - "&5[ArthoNetwork] &dMerci de votre fidélité ! &5Dons : &d%link%"
+  - "&6[ArthoNetwork] &eSoutenez le serveur ! Faites un don ici : &b$link"
+  - "&d[ArthoNetwork] &5Envie de nous aider ? &dC'est par ici : &e$link"
+  - "&a[ArthoNetwork] &2Les serveurs ne sont pas gratuits, &aaidez-nous ! &b$link"
+  - "&c[ArthoNetwork] &4Un petit geste pour le serveur ? &c$link"
+  - "&9[ArthoNetwork] &3Participez à l'aventure en nous soutenant : &b$link"
+  - "&5[ArthoNetwork] &dMerci de votre fidélité ! &5Dons : &d$link"
