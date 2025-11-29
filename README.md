@@ -19,6 +19,9 @@ Permission requise : `arthodonation.admin`
 | `/don link <url>` | Modifie le lien de don (remplace `$link`). |
 | `/don reset` | Réinitialise la configuration aux valeurs par défaut. |
 | `/don reload` | Recharge la configuration depuis le fichier. |
+| `/ping` | Affiche votre latence (ping). |
+| `/lag joueur` | Analyse les entités et chunks autour de vous. |
+| `/lag serveur` | Affiche l'utilisation RAM et le nombre total d'entités. |
 
 ## Configuration (`config.yml`)
 
