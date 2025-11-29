@@ -1,0 +1,8 @@
+name: ArthoDonation
+version: 1.0
+main: net.arthonetwork.donation.ArthoPlugin
+api-version: 1.13
+commands:
+  arthoreload:
+    description: Reloads the plugin configuration
+    permission: arthodonation.reload
