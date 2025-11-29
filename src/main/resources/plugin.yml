@@ -6,4 +6,10 @@ commands:
   don:
     description: Main command for ArthoDonation
     permission: arthodonation.admin
-    usage: /don <add|link|reset|reload> [args]
+    usage: /don <add|link|reset|reload|help> [args]
+  ping:
+    description: Check your latency
+    usage: /ping
+  lag:
+    description: Check server or player lag sources
+    usage: /lag <joueur|serveur|help>
