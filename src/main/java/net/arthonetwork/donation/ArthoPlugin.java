@@ -6,6 +6,7 @@ import net.arthonetwork.donation.commands.PingCommand;
 import net.arthonetwork.donation.commands.ServerCommand;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
+import net.arthonetwork.donation.utils.ArthoTabCompleter;
 import net.arthonetwork.donation.utils.SuggestionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -37,6 +38,12 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("ping").setExecutor(new PingCommand());
         getCommand("lag").setExecutor(new LagCommand());
         getCommand("server").setExecutor(new ServerCommand(suggestionManager));
+
+        // Register TabCompleter
+        ArthoTabCompleter tabCompleter = new ArthoTabCompleter();
+        getCommand("don").setTabCompleter(tabCompleter);
+        getCommand("lag").setTabCompleter(tabCompleter);
+        getCommand("server").setTabCompleter(tabCompleter);
 
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
@@ -85,5 +92,9 @@ public class ArthoPlugin extends JavaPlugin {
         };
         // Interval is in seconds, convert to ticks (20 ticks = 1 second)
         task.runTaskTimer(this, 0L, interval * 20L);
+    }
+
+    public SuggestionManager getSuggestionManager() {
+        return suggestionManager;
     }
 }

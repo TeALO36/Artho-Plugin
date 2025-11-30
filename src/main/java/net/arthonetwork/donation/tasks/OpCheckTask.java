@@ -16,6 +16,9 @@ public class OpCheckTask extends BukkitRunnable {
 
     @Override
     public void run() {
+        // Clean up offline players to prevent memory leak
+        opStatus.keySet().removeIf(uuid -> Bukkit.getPlayer(uuid) == null);
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID uuid = player.getUniqueId();
             boolean isOp = player.isOp();

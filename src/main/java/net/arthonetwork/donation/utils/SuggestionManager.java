@@ -47,6 +47,10 @@ public class SuggestionManager {
         }
     }
 
+    public void reload() {
+        suggestionsConfig = YamlConfiguration.loadConfiguration(suggestionsFile);
+    }
+
     public void addSuggestion(String playerName, String content) {
         String id = UUID.randomUUID().toString().substring(0, 8);
         String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());

@@ -37,6 +37,7 @@ public class DonCommand implements CommandExecutor {
                 plugin.reloadConfig();
                 plugin.loadConfig(); // Ensure local variables are updated
                 plugin.startBroadcasting();
+                plugin.getSuggestionManager().reload();
                 sender.sendMessage(ChatColor.GREEN + "ArthoDonation configuration reloaded!");
                 break;
             case "link":
