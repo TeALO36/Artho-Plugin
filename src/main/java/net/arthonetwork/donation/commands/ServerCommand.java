@@ -6,56 +6,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-import java.util.Map;
-
-public class ServerCommand implements CommandExecutor {
-
-    private final SuggestionManager suggestionManager;
-
-    public ServerCommand(SuggestionManager suggestionManager) {
-        this.suggestionManager = suggestionManager;
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length == 0) {
-            sendHelp(sender);
-            return true;
-        }
-
-        String sub = args[0].toLowerCase();
-        switch (sub) {
-            case "help":
-                sendHelp(sender);
-                break;
-            case "add":
-                if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /server add <votre suggestion>");
-                    return true;
-                }
-                StringBuilder contentBuilder = new StringBuilder();
-                for (int i = 1; i < args.length; i++) {
-                    contentBuilder.append(args[i]).append(" ");
-                }
-                String content = contentBuilder.toString().trim();
-                suggestionManager.addSuggestion(sender.getName(), content);
-                sender.sendMessage(ChatColor.GREEN + "Merci ! Votre suggestion a été ajoutée.");
-                break;
-            case "list":
-                sender.sendMessage(ChatColor.GOLD + "--- Liste des Suggestions ---");
-                Map<String, String> suggestions = suggestionManager.getSuggestions();
-                if (suggestions.isEmpty()) {
-                    sender.sendMessage(ChatColor.GRAY + "Aucune suggestion pour le moment.");
-package net.arthonetwork.donation.commands;
-
-import net.arthonetwork.donation.utils.SuggestionManager;
-import org.bukkit.ChatColor;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
-
-import java.util.Arrays; // Added for Arrays.copyOfRange
-import java.util.List; // Added for List in handleList
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 public class ServerCommand implements CommandExecutor {

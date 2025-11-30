@@ -65,6 +65,25 @@ public class ArthoPlugin extends JavaPlugin {
 
         // Start tasks
         startBroadcasting();
+        opCheckTask = new OpCheckTask();
+        opCheckTask.runTaskTimer(this, 20L, 100L); // Check every 5 seconds (100 ticks)
+
+        // Start Auth Reminder Task (every 2 seconds = 40 ticks)
+        new AuthReminderTask(this, authManager).runTaskTimer(this, 20L, 40L);
+
+        getLogger().info("Artho-Plugin enabled!");
+    }
+
+    @Override
+    public void onDisable() {
+        if (task != null && !task.isCancelled()) {
+            task.cancel();
+        }
+        if (opCheckTask != null && !opCheckTask.isCancelled()) {
+            opCheckTask.cancel();
+        }
+        getLogger().info("Artho-Plugin disabled!");
+    }
 
     public void loadConfig() {
         reloadConfig();
