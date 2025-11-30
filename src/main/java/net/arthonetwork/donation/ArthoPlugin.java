@@ -3,6 +3,8 @@ package net.arthonetwork.donation;
 import net.arthonetwork.donation.commands.DonCommand;
 import net.arthonetwork.donation.commands.LagCommand;
 import net.arthonetwork.donation.commands.PingCommand;
+import net.arthonetwork.donation.commands.ServerCommand;
+import net.arthonetwork.donation.utils.SuggestionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -18,16 +20,20 @@ public class ArthoPlugin extends JavaPlugin {
     private String donationLink;
     private int interval;
     private BukkitRunnable task;
+    private SuggestionManager suggestionManager;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
         loadConfig();
 
+        suggestionManager = new SuggestionManager(this);
+
         // Register commands
         getCommand("don").setExecutor(new DonCommand(this));
         getCommand("ping").setExecutor(new PingCommand());
         getCommand("lag").setExecutor(new LagCommand());
+        getCommand("server").setExecutor(new ServerCommand(suggestionManager));
 
         startBroadcasting();
         getLogger().info("ArthoDonation enabled!");

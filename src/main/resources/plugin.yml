@@ -13,3 +13,6 @@ commands:
   lag:
     description: Check server or player lag sources
     usage: /lag <joueur|serveur|help>
+  server:
+    description: Suggestion system
+    usage: /server <add|list|remove|help>
