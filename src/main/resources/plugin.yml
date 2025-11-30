@@ -17,14 +17,14 @@ commands:
     description: Suggestion system
     usage: /server <add|list|remove|help>
   register:
-name: ArthoDonation
-version: 1.0
+name: Artho-Plugin
+version: 0.6.0
 main: net.arthonetwork.donation.ArthoPlugin
 api-version: 1.13
 commands:
   don:
-    description: Main command for ArthoDonation
-    permission: arthodonation.admin
+    description: Main command for Artho-Plugin
+    permission: arthoplugin.admin
     usage: /don <add|link|reset|reload|help> [args]
   ping:
     description: Check your latency
@@ -44,7 +44,7 @@ commands:
   auth:
     description: Gérer l'authentification (Admin).
     usage: /auth <subcommand>
-    permission: arthodonation.admin
+    permission: arthoplugin.admin
   changepassword:
     description: Changer son mot de passe.
     usage: /changepassword <nouveau> <confirmation>

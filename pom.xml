@@ -4,10 +4,10 @@
 
   <groupId>net.arthonetwork</groupId>
   <artifactId>donation-plugin</artifactId>
-  <version>0.6.0</version>
+  <version>0.7.0</version>
   <packaging>jar</packaging>
 
-  <name>ArthoDonation</name>
+  <name>Artho-Plugin</name>
   <url>http://maven.apache.org</url>
 
   <properties>

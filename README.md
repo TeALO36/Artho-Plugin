@@ -1,4 +1,4 @@
-# ArthoDonation
+# Artho-Plugin
 
 Plugin Minecraft pour ArthoNetwork permettant de diffuser des messages de dons configurables avec support de couleurs et variables.
 
@@ -31,7 +31,7 @@ Ce plugin est compatible avec les versions de Minecraft **1.13 à 1.20.1**.
 | `/login <mdp>` | Se connecter. |
 | `/changepassword <nouveau> <confirm>` | Changer son mot de passe (Requis après reset). |
 
-### Administration (Permission: `arthodonation.admin`)
+### Administration (Permission: `arthoplugin.admin`)
 | Commande | Description |
 |----------|-------------|
 | `/don add <message>` | Ajoute un nouveau message à la liste de diffusion. |

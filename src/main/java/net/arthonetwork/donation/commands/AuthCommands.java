@@ -108,7 +108,7 @@ public class AuthCommands implements CommandExecutor {
     }
 
     private void handleAdminAuth(CommandSender sender, String[] args) {
-        if (!sender.hasPermission("arthodonation.admin") && !sender.isOp()) {
+        if (!sender.hasPermission("arthoplugin.admin") && !sender.isOp()) {
             sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission.");
             return;
         }

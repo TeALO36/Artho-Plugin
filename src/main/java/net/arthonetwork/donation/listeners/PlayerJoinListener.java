@@ -24,7 +24,7 @@ public class PlayerJoinListener implements Listener {
         player.sendMessage(
                 ChatColor.AQUA + "/server <add|list> " + ChatColor.WHITE + "- Suggérer des fonctionnalités.");
 
-        if (player.isOp() || player.hasPermission("arthodonation.admin")) {
+        if (player.isOp() || player.hasPermission("arthoplugin.admin")) {
             sendOpCommands(player);
         }
     }
