@@ -4,6 +4,8 @@ import net.arthonetwork.donation.commands.DonCommand;
 import net.arthonetwork.donation.commands.LagCommand;
 import net.arthonetwork.donation.commands.PingCommand;
 import net.arthonetwork.donation.commands.ServerCommand;
+import net.arthonetwork.donation.listeners.PlayerJoinListener;
+import net.arthonetwork.donation.tasks.OpCheckTask;
 import net.arthonetwork.donation.utils.SuggestionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -21,6 +23,7 @@ public class ArthoPlugin extends JavaPlugin {
     private int interval;
     private BukkitRunnable task;
     private SuggestionManager suggestionManager;
+    private OpCheckTask opCheckTask;
 
     @Override
     public void onEnable() {
@@ -35,7 +38,14 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("lag").setExecutor(new LagCommand());
         getCommand("server").setExecutor(new ServerCommand(suggestionManager));
 
+        // Register events
+        getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
+
+        // Start tasks
         startBroadcasting();
+        opCheckTask = new OpCheckTask();
+        opCheckTask.runTaskTimer(this, 20L, 100L); // Check every 5 seconds (100 ticks)
+
         getLogger().info("ArthoDonation enabled!");
     }
 
@@ -43,6 +53,9 @@ public class ArthoPlugin extends JavaPlugin {
     public void onDisable() {
         if (task != null && !task.isCancelled()) {
             task.cancel();
+        }
+        if (opCheckTask != null && !opCheckTask.isCancelled()) {
+            opCheckTask.cancel();
         }
         getLogger().info("ArthoDonation disabled!");
     }
