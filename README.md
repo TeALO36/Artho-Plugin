@@ -22,6 +22,9 @@ Permission requise : `arthodonation.admin`
 | `/ping` | Affiche votre latence (ping). |
 | `/lag joueur` | Analyse les entités et chunks autour de vous. |
 | `/lag serveur` | Affiche l'utilisation RAM et le nombre total d'entités. |
+| `/server add <texte>` | Proposer une fonctionnalité (tout le monde). |
+| `/server list` | Voir la liste des suggestions actives. |
+| `/server remove <id>` | Supprimer une suggestion (Admin). |
 
 ## Configuration (`config.yml`)
 
