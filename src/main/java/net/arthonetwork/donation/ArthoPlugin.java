@@ -46,7 +46,7 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("lag").setExecutor(new LagCommand());
         getCommand("server").setExecutor(new ServerCommand(suggestionManager));
 
-        AuthCommands authCmd = new AuthCommands(authManager);
+        AuthCommands authCmd = new AuthCommands(this, authManager);
         getCommand("register").setExecutor(authCmd);
         getCommand("login").setExecutor(authCmd);
         getCommand("auth").setExecutor(authCmd);
@@ -60,7 +60,7 @@ public class ArthoPlugin extends JavaPlugin {
 
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
-        getServer().getPluginManager().registerEvents(new AuthListener(authManager), this);
+        getServer().getPluginManager().registerEvents(new AuthListener(this, authManager), this);
 
         // Start tasks
         startBroadcasting();
@@ -68,7 +68,7 @@ public class ArthoPlugin extends JavaPlugin {
         opCheckTask.runTaskTimer(this, 20L, 100L); // Check every 5 seconds (100 ticks)
 
         // Start Auth Reminder Task (every 2 seconds = 40 ticks)
-        new AuthReminderTask(authManager).runTaskTimer(this, 20L, 40L);
+        new AuthReminderTask(this, authManager).runTaskTimer(this, 20L, 40L);
 
         getLogger().info("ArthoDonation enabled!");
     }
@@ -120,6 +120,16 @@ public class ArthoPlugin extends JavaPlugin {
         getConfig().set("donation-enabled", enabled);
         saveConfig();
         startBroadcasting();
+    }
+
+    public String getAuthMessage(String path) {
+        return ChatColor.translateAlternateColorCodes('&',
+                getConfig().getString("auth.messages." + path, "&cMessage missing: " + path));
+    }
+
+    public String getWhitelistMessage() {
+        return ChatColor.translateAlternateColorCodes('&',
+                getConfig().getString("auth.whitelist.kick-message", "&cNot whitelisted"));
     }
 
     public SuggestionManager getSuggestionManager() {

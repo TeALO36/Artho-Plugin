@@ -1,16 +1,18 @@
 package net.arthonetwork.donation.tasks;
 
+import net.arthonetwork.donation.ArthoPlugin;
 import net.arthonetwork.donation.utils.AuthManager;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class AuthReminderTask extends BukkitRunnable {
 
+    private final ArthoPlugin plugin;
     private final AuthManager authManager;
 
-    public AuthReminderTask(AuthManager authManager) {
+    public AuthReminderTask(ArthoPlugin plugin, AuthManager authManager) {
+        this.plugin = plugin;
         this.authManager = authManager;
     }
 
@@ -19,13 +21,13 @@ public class AuthReminderTask extends BukkitRunnable {
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (!authManager.isLoggedIn(player.getUniqueId())) {
                 boolean isRegistered = authManager.isRegistered(player.getUniqueId());
-                String title = ChatColor.RED + "Authentification Requise";
+                String title = plugin.getAuthMessage("title");
                 String subtitle;
 
                 if (isRegistered) {
-                    subtitle = ChatColor.YELLOW + "/login <mot de passe>";
+                    subtitle = plugin.getAuthMessage("subtitle-login");
                 } else {
-                    subtitle = ChatColor.YELLOW + "/register <mdp> <confirmation>";
+                    subtitle = plugin.getAuthMessage("subtitle-register");
                 }
 
                 // sendTitle(title, subtitle, fadeIn, stay, fadeOut)

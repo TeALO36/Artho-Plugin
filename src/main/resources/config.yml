@@ -1,15 +1,39 @@
 # Interval in seconds
 interval: 300
 
+# Interval in seconds
+interval: 300
+
 # The donation link
 donation-link: "https://buy.stripe.com/14k8Al4ki5tl8HmfZb"
 
 # Messages to broadcast. %link% will be replaced by the donation link.
 # Supports color codes with &
 messages:
-  - "&6[ArthoNetwork] &eSoutenez le serveur ! Faites un don ici : &b$link"
-  - "&d[ArthoNetwork] &5Envie de nous aider ? &dC'est par ici : &e$link"
+  - "&d&lArthoNetwork &7» &fSoutenez le serveur : &d$link"
+  - "&d&lArthoNetwork &7» &fEnvie d'aider ? Faites un don : &d$link"
   - "&a[ArthoNetwork] &2Les serveurs ne sont pas gratuits, &aaidez-nous ! &b$link"
   - "&c[ArthoNetwork] &4Un petit geste pour le serveur ? &c$link"
   - "&9[ArthoNetwork] &3Participez à l'aventure en nous soutenant : &b$link"
   - "&5[ArthoNetwork] &dMerci de votre fidélité ! &5Dons : &d$link"
+
+auth:
+  whitelist:
+    kick-message: "&cVous n'êtes pas sur la whitelist !"
+  messages:
+    not-registered: "&c⚠ Vous devez vous enregistrer !"
+    not-logged-in: "&c⚠ Vous devez vous connecter !"
+    login-instruction: "&e/login <motdepasse>"
+    register-instruction: "&e/register <motdepasse> <confirmation>"
+    title: "&cAuthentification Requise"
+    subtitle-login: "&e/login <mot de passe>"
+    subtitle-register: "&e/register <mdp> <confirmation>"
+    success-login: "&aVous êtes connecté !"
+    success-register: "&aInscription réussie ! Vous êtes connecté."
+    wrong-password: "&cMot de passe incorrect !"
+    already-logged-in: "&cVous êtes déjà connecté."
+    passwords-do-not-match: "&cLes mots de passe ne correspondent pas."
+    already-registered: "&cVous êtes déjà enregistré ! Utilisez /login."
+    not-registered-error: "&cVous n'êtes pas enregistré ! Utilisez /register."
+    usage-login: "&cUsage: /login <mot de passe>"
+    usage-register: "&cUsage: /register <mot de passe> <confirmation>"

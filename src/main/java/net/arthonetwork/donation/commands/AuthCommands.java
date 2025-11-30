@@ -1,5 +1,6 @@
 package net.arthonetwork.donation.commands;
 
+import net.arthonetwork.donation.ArthoPlugin;
 import net.arthonetwork.donation.utils.AuthManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -13,9 +14,11 @@ import java.util.UUID;
 
 public class AuthCommands implements CommandExecutor {
 
+    private final ArthoPlugin plugin;
     private final AuthManager authManager;
 
-    public AuthCommands(AuthManager authManager) {
+    public AuthCommands(ArthoPlugin plugin, AuthManager authManager) {
+        this.plugin = plugin;
         this.authManager = authManager;
     }
 
@@ -35,34 +38,33 @@ public class AuthCommands implements CommandExecutor {
 
         if (command.getName().equalsIgnoreCase("register")) {
             if (authManager.isRegistered(uuid)) {
-                player.sendMessage(ChatColor.RED + "Vous êtes déjà enregistré ! Utilisez /login <motdepasse>.");
+                player.sendMessage(plugin.getAuthMessage("already-registered"));
                 return true;
             }
             if (args.length != 2) {
-                player.sendMessage(ChatColor.RED + "Usage: /register <motdepasse> <confirmation>");
+                player.sendMessage(plugin.getAuthMessage("usage-register"));
                 return true;
             }
             if (!args[0].equals(args[1])) {
-                player.sendMessage(ChatColor.RED + "Les mots de passe ne correspondent pas.");
+                player.sendMessage(plugin.getAuthMessage("passwords-do-not-match"));
                 return true;
             }
             authManager.register(uuid, args[0], player.getAddress().getAddress().getHostAddress());
-            player.sendMessage(ChatColor.GREEN + "Enregistrement réussi ! Vous êtes maintenant connecté.");
+            player.sendMessage(plugin.getAuthMessage("success-register"));
             return true;
         }
 
         if (command.getName().equalsIgnoreCase("login")) {
             if (!authManager.isRegistered(uuid)) {
-                player.sendMessage(
-                        ChatColor.RED + "Vous n'êtes pas enregistré ! Utilisez /register <motdepasse> <confirmation>.");
+                player.sendMessage(plugin.getAuthMessage("not-registered-error"));
                 return true;
             }
             if (authManager.isLoggedIn(uuid)) {
-                player.sendMessage(ChatColor.RED + "Vous êtes déjà connecté.");
+                player.sendMessage(plugin.getAuthMessage("already-logged-in"));
                 return true;
             }
             if (args.length != 1) {
-                player.sendMessage(ChatColor.RED + "Usage: /login <motdepasse>");
+                player.sendMessage(plugin.getAuthMessage("usage-login"));
                 return true;
             }
 
@@ -73,9 +75,9 @@ public class AuthCommands implements CommandExecutor {
             }
 
             if (authManager.login(uuid, args[0])) {
-                player.sendMessage(ChatColor.GREEN + "Connexion réussie !");
+                player.sendMessage(plugin.getAuthMessage("success-login"));
             } else {
-                player.sendMessage(ChatColor.RED + "Mot de passe incorrect.");
+                player.sendMessage(plugin.getAuthMessage("wrong-password"));
             }
             return true;
         }
