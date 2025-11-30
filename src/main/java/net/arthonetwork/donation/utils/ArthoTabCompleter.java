@@ -36,6 +36,18 @@ public class ArthoTabCompleter implements TabCompleter {
                     commands.add("remove");
                 }
             }
+        } else if (command.getName().equalsIgnoreCase("auth")) {
+            if (sender.hasPermission("arthodonation.admin") || sender.isOp()) {
+                if (args.length == 1) {
+                    commands.addAll(Arrays.asList("unregister", "whitelist", "set"));
+                } else if (args.length == 2) {
+                    if (args[0].equalsIgnoreCase("whitelist")) {
+                        commands.addAll(Arrays.asList("add", "remove", "list", "on", "off"));
+                    } else if (args[0].equalsIgnoreCase("set")) {
+                        commands.addAll(Arrays.asList("max-attempts", "timeout"));
+                    }
+                }
+            }
         }
 
         StringUtil.copyPartialMatches(args[0], commands, completions);

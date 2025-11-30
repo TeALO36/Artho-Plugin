@@ -55,6 +55,7 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("don").setTabCompleter(tabCompleter);
         getCommand("lag").setTabCompleter(tabCompleter);
         getCommand("server").setTabCompleter(tabCompleter);
+        getCommand("auth").setTabCompleter(tabCompleter);
 
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);

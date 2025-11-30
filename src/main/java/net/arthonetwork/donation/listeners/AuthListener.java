@@ -20,6 +20,16 @@ public class AuthListener implements Listener {
         this.authManager = authManager;
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onLogin(PlayerLoginEvent event) {
+        if (authManager.isWhitelistEnabled()) {
+            if (!authManager.isWhitelisted(event.getPlayer().getName())) {
+                event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST,
+                        ChatColor.RED + "Vous n'êtes pas sur la whitelist !");
+            }
+        }
+    }
+
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();

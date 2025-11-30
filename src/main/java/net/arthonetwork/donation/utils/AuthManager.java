@@ -114,12 +114,67 @@ public class AuthManager {
         }
 
         int attempts = ipAttempts.getOrDefault(ip, 0);
-        if (attempts >= 5) {
-            ipTimeouts.put(ip, System.currentTimeMillis() + 300000); // 5 minutes timeout
+        if (attempts >= getMaxAttempts()) {
+            ipTimeouts.put(ip, System.currentTimeMillis() + (getLoginTimeout() * 1000L));
             return false;
         }
 
         ipAttempts.put(ip, attempts + 1);
         return true;
+    }
+
+    // Whitelist & Config Methods
+
+    public boolean isWhitelistEnabled() {
+        return userdataConfig.getBoolean("whitelist.enabled", false);
+    }
+
+    public void setWhitelistEnabled(boolean enabled) {
+        userdataConfig.set("whitelist.enabled", enabled);
+        saveUserdata();
+    }
+
+    public boolean isWhitelisted(String name) {
+        List<String> list = userdataConfig.getStringList("whitelist.list");
+        return list.contains(name.toLowerCase());
+    }
+
+    public void addWhitelist(String name) {
+        List<String> list = userdataConfig.getStringList("whitelist.list");
+        if (!list.contains(name.toLowerCase())) {
+            list.add(name.toLowerCase());
+            userdataConfig.set("whitelist.list", list);
+            saveUserdata();
+        }
+    }
+
+    public void removeWhitelist(String name) {
+        List<String> list = userdataConfig.getStringList("whitelist.list");
+        if (list.remove(name.toLowerCase())) {
+            userdataConfig.set("whitelist.list", list);
+            saveUserdata();
+        }
+    }
+
+    public List<String> getWhitelist() {
+        return userdataConfig.getStringList("whitelist.list");
+    }
+
+    public void setMaxAttempts(int max) {
+        userdataConfig.set("config.max-attempts", max);
+        saveUserdata();
+    }
+
+    public int getMaxAttempts() {
+        return userdataConfig.getInt("config.max-attempts", 5);
+    }
+
+    public void setLoginTimeout(int seconds) {
+        userdataConfig.set("config.login-timeout", seconds);
+        saveUserdata();
+    }
+
+    public int getLoginTimeout() {
+        return userdataConfig.getInt("config.login-timeout", 300);
     }
 }

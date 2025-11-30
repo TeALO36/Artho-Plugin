@@ -94,19 +94,101 @@ public class AuthCommands implements CommandExecutor {
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "Usage: /auth unregister <player>");
+            sendAdminHelp(sender);
             return;
         }
 
-        if (args[0].equalsIgnoreCase("unregister")) {
-            String targetName = args[1];
-            OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-            if (target != null) {
-                authManager.unregister(target.getUniqueId());
-                sender.sendMessage(ChatColor.GREEN + "Joueur " + targetName + " désenregistré.");
-            } else {
-                sender.sendMessage(ChatColor.RED + "Joueur introuvable.");
-            }
+        String sub = args[0].toLowerCase();
+        switch (sub) {
+            case "unregister":
+                String targetName = args[1];
+                OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+                if (target != null) {
+                    authManager.unregister(target.getUniqueId());
+                    sender.sendMessage(ChatColor.GREEN + "Joueur " + targetName + " désenregistré.");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Joueur introuvable.");
+                }
+                break;
+            case "whitelist":
+                handleWhitelist(sender, args);
+                break;
+            case "set":
+                handleSet(sender, args);
+                break;
+            default:
+                sendAdminHelp(sender);
+                break;
         }
+    }
+
+    private void handleWhitelist(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /auth whitelist <add|remove|list|on|off>");
+            return;
+        }
+        String action = args[1].toLowerCase();
+        switch (action) {
+            case "add":
+                if (args.length < 3) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /auth whitelist add <player>");
+                    return;
+                }
+                authManager.addWhitelist(args[2]);
+                sender.sendMessage(ChatColor.GREEN + args[2] + " ajouté à la whitelist.");
+                break;
+            case "remove":
+                if (args.length < 3) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /auth whitelist remove <player>");
+                    return;
+                }
+                authManager.removeWhitelist(args[2]);
+                sender.sendMessage(ChatColor.GREEN + args[2] + " retiré de la whitelist.");
+                break;
+            case "list":
+                sender.sendMessage(ChatColor.GOLD + "Whitelist: " + ChatColor.WHITE
+                        + String.join(", ", authManager.getWhitelist()));
+                break;
+            case "on":
+                authManager.setWhitelistEnabled(true);
+                sender.sendMessage(ChatColor.GREEN + "Whitelist activée.");
+                break;
+            case "off":
+                authManager.setWhitelistEnabled(false);
+                sender.sendMessage(ChatColor.RED + "Whitelist désactivée.");
+                break;
+            default:
+                sender.sendMessage(ChatColor.RED + "Action inconnue.");
+                break;
+        }
+    }
+
+    private void handleSet(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(ChatColor.RED + "Usage: /auth set <max-attempts|timeout> <value>");
+            return;
+        }
+        String setting = args[1].toLowerCase();
+        try {
+            int value = Integer.parseInt(args[2]);
+            if (setting.equals("max-attempts")) {
+                authManager.setMaxAttempts(value);
+                sender.sendMessage(ChatColor.GREEN + "Max tentatives défini à " + value);
+            } else if (setting.equals("timeout")) {
+                authManager.setLoginTimeout(value);
+                sender.sendMessage(ChatColor.GREEN + "Timeout défini à " + value + " secondes");
+            } else {
+                sender.sendMessage(ChatColor.RED + "Paramètre inconnu.");
+            }
+        } catch (NumberFormatException e) {
+            sender.sendMessage(ChatColor.RED + "La valeur doit être un nombre entier.");
+        }
+    }
+
+    private void sendAdminHelp(CommandSender sender) {
+        sender.sendMessage(ChatColor.GOLD + "--- ArthoAuth Admin ---");
+        sender.sendMessage(ChatColor.YELLOW + "/auth unregister <player>");
+        sender.sendMessage(ChatColor.YELLOW + "/auth whitelist <add|remove|list|on|off>");
+        sender.sendMessage(ChatColor.YELLOW + "/auth set <max-attempts|timeout> <value>");
     }
 }
