@@ -20,7 +20,7 @@ public class ArthoTabCompleter implements TabCompleter {
         if (command.getName().equalsIgnoreCase("don")) {
             if (args.length == 1) {
                 if (sender.hasPermission("arthodonation.admin") || sender.isOp()) {
-                    commands.addAll(Arrays.asList("add", "link", "reset", "reload", "help"));
+                    commands.addAll(Arrays.asList("add", "link", "reset", "reload", "help", "enable", "disable"));
                 } else {
                     commands.add("help");
                 }

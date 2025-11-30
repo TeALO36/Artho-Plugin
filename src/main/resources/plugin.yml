@@ -16,3 +16,13 @@ commands:
   server:
     description: Suggestion system
     usage: /server <add|list|remove|help>
+  register:
+    description: Register an account
+    usage: /register <password> <confirm>
+  login:
+    description: Login to your account
+    usage: /login <password>
+  auth:
+    description: Admin authentication management
+    usage: /auth <unregister> <player>
+    permission: arthodonation.admin

@@ -74,6 +74,14 @@ public class DonCommand implements CommandExecutor {
                 plugin.startBroadcasting();
                 sender.sendMessage(ChatColor.GREEN + "Configuration reset to default!");
                 break;
+            case "enable":
+                plugin.setDonationEnabled(true);
+                sender.sendMessage(ChatColor.GREEN + "Donation broadcasting enabled!");
+                break;
+            case "disable":
+                plugin.setDonationEnabled(false);
+                sender.sendMessage(ChatColor.RED + "Donation broadcasting disabled!");
+                break;
             default:
                 sender.sendMessage(ChatColor.RED + "Unknown subcommand.");
                 sendHelp(sender);
@@ -86,6 +94,8 @@ public class DonCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.GOLD + "--- ArthoDonation Help ---");
         sender.sendMessage(ChatColor.YELLOW + "/don add <message> " + ChatColor.WHITE + "- Add a donation message.");
         sender.sendMessage(ChatColor.YELLOW + "/don link <url> " + ChatColor.WHITE + "- Set the donation link.");
+        sender.sendMessage(ChatColor.YELLOW + "/don enable " + ChatColor.WHITE + "- Enable broadcasting.");
+        sender.sendMessage(ChatColor.YELLOW + "/don disable " + ChatColor.WHITE + "- Disable broadcasting.");
         sender.sendMessage(ChatColor.YELLOW + "/don reset " + ChatColor.WHITE + "- Reset config to defaults.");
         sender.sendMessage(ChatColor.YELLOW + "/don reload " + ChatColor.WHITE + "- Reload configuration.");
         sender.sendMessage(ChatColor.YELLOW + "/don help " + ChatColor.WHITE + "- Show this help message.");
