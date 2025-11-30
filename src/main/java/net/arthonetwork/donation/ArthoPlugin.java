@@ -94,6 +94,11 @@ public class ArthoPlugin extends JavaPlugin {
         donationEnabled = config.getBoolean("donation-enabled", true);
     }
 
+    // Alias for loadConfig to match DonCommand usage
+    public void loadConfiguration() {
+        loadConfig();
+    }
+
     public void startBroadcasting() {
         if (task != null && !task.isCancelled()) {
             task.cancel();
@@ -121,6 +126,23 @@ public class ArthoPlugin extends JavaPlugin {
         getConfig().set("donation-enabled", enabled);
         saveConfig();
         startBroadcasting();
+    }
+
+    public void addMessage(String message) {
+        messages.add(message);
+        getConfig().set("messages", messages);
+        saveConfig();
+    }
+
+    public void setDonationLink(String link) {
+        this.donationLink = link;
+        getConfig().set("donation-link", link);
+        saveConfig();
+    }
+
+    public void resetConfig() {
+        saveResource("config.yml", true);
+        loadConfig();
     }
 
     public String getAuthMessage(String path) {

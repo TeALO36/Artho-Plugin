@@ -9,6 +9,7 @@ import org.bukkit.command.CommandSender;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 public class ServerCommand implements CommandExecutor {
 
@@ -59,27 +60,24 @@ public class ServerCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + "Usage: /server remove <id>");
             return;
         }
-        try {
-            int id = Integer.parseInt(args[1]);
-            if (suggestionManager.removeSuggestion(id)) {
-                sender.sendMessage(ChatColor.GREEN + "Suggestion #" + id + " supprimée.");
-            } else {
-                sender.sendMessage(ChatColor.RED + "Suggestion introuvable.");
-            }
-        } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "L'ID doit être un nombre.");
+        // SuggestionManager expects String id, not int
+        String id = args[1];
+        if (suggestionManager.removeSuggestion(id, sender.getName())) {
+            sender.sendMessage(ChatColor.GREEN + "Suggestion #" + id + " supprimée.");
+        } else {
+            sender.sendMessage(ChatColor.RED + "Suggestion introuvable.");
         }
     }
 
     private void handleList(CommandSender sender) {
-        List<String> suggestions = suggestionManager.getSuggestions();
+        Map<String, String> suggestions = suggestionManager.getSuggestions();
         if (suggestions.isEmpty()) {
             sender.sendMessage(ChatColor.YELLOW + "Aucune suggestion active.");
             return;
         }
         sender.sendMessage(ChatColor.GOLD + "--- Suggestions ---");
-        for (String s : suggestions) {
-            sender.sendMessage(ChatColor.YELLOW + s);
+        for (Map.Entry<String, String> entry : suggestions.entrySet()) {
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', entry.getValue()));
         }
     }
 
