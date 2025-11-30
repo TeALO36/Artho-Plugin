@@ -31,23 +31,6 @@ public class AuthListener implements Listener {
     }
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
-        authManager.logout(player.getUniqueId()); // Ensure fresh login
-
-        if (!authManager.isRegistered(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "⚠ Vous devez vous enregistrer !");
-            player.sendMessage(ChatColor.YELLOW + "/register <motdepasse> <confirmation>");
-        } else {
-            player.sendMessage(ChatColor.RED + "⚠ Vous devez vous connecter !");
-            player.sendMessage(ChatColor.YELLOW + "/login <motdepasse>");
-        }
-
-        // Apply blindness
-        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 1));
-    }
-
-    @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         authManager.logout(event.getPlayer().getUniqueId());
     }

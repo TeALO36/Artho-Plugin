@@ -8,6 +8,7 @@ import net.arthonetwork.donation.commands.ServerCommand;
 import net.arthonetwork.donation.listeners.AuthListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
+import net.arthonetwork.donation.tasks.AuthReminderTask;
 import net.arthonetwork.donation.utils.ArthoTabCompleter;
 import net.arthonetwork.donation.utils.AuthManager;
 import net.arthonetwork.donation.utils.SuggestionManager;
@@ -65,6 +66,9 @@ public class ArthoPlugin extends JavaPlugin {
         startBroadcasting();
         opCheckTask = new OpCheckTask();
         opCheckTask.runTaskTimer(this, 20L, 100L); // Check every 5 seconds (100 ticks)
+
+        // Start Auth Reminder Task (every 2 seconds = 40 ticks)
+        new AuthReminderTask(authManager).runTaskTimer(this, 20L, 40L);
 
         getLogger().info("ArthoDonation enabled!");
     }
