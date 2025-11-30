@@ -3,6 +3,7 @@ package net.arthonetwork.donation.tasks;
 import net.arthonetwork.donation.ArthoPlugin;
 import net.arthonetwork.donation.utils.AuthManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -32,6 +33,10 @@ public class AuthReminderTask extends BukkitRunnable {
 
                 // sendTitle(title, subtitle, fadeIn, stay, fadeOut)
                 // 0 fadeIn, 40 stay (2s), 10 fadeOut
+                player.sendTitle(title, subtitle, 0, 40, 10);
+            } else if (authManager.isForceChange(player.getUniqueId())) {
+                String title = ChatColor.RED + "Changement Requis";
+                String subtitle = ChatColor.YELLOW + "/changepassword <nouveau> <confirm>";
                 player.sendTitle(title, subtitle, 0, 40, 10);
             }
         }

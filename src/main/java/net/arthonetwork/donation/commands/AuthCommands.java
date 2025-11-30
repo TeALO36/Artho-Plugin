@@ -82,6 +82,24 @@ public class AuthCommands implements CommandExecutor {
             return true;
         }
 
+        if (command.getName().equalsIgnoreCase("changepassword")) {
+            if (!authManager.isLoggedIn(uuid)) {
+                player.sendMessage(plugin.getAuthMessage("not-logged-in"));
+                return true;
+            }
+            if (args.length != 2) {
+                player.sendMessage(plugin.getAuthMessage("usage-changepassword"));
+                return true;
+            }
+            if (!args[0].equals(args[1])) {
+                player.sendMessage(plugin.getAuthMessage("passwords-do-not-match"));
+                return true;
+            }
+            authManager.changePassword(uuid, args[0]);
+            player.sendMessage(plugin.getAuthMessage("password-changed"));
+            return true;
+        }
+
         if (command.getName().equalsIgnoreCase("auth")) {
             handleAdminAuth(sender, args);
         }
@@ -103,6 +121,7 @@ public class AuthCommands implements CommandExecutor {
         String sub = args[0].toLowerCase();
         switch (sub) {
             case "unregister":
+                // ... existing unregister logic ...
                 String targetName = args[1];
                 OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
                 if (target != null) {
@@ -111,6 +130,9 @@ public class AuthCommands implements CommandExecutor {
                 } else {
                     sender.sendMessage(ChatColor.RED + "Joueur introuvable.");
                 }
+                break;
+            case "reset":
+                handleReset(sender, args);
                 break;
             case "whitelist":
                 handleWhitelist(sender, args);
@@ -124,7 +146,33 @@ public class AuthCommands implements CommandExecutor {
         }
     }
 
+    private void handleReset(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /auth reset <player>");
+            return;
+        }
+        String targetName = args[1];
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        if (target != null && authManager.isRegistered(target.getUniqueId())) {
+            String newPass = authManager.resetPassword(target.getUniqueId());
+            String msg = plugin.getAuthMessage("admin-reset-success").replace("$player", targetName);
+
+            net.md_5.bungee.api.chat.TextComponent message = new net.md_5.bungee.api.chat.TextComponent(msg + newPass);
+            message.setClickEvent(new net.md_5.bungee.api.chat.ClickEvent(
+                    net.md_5.bungee.api.chat.ClickEvent.Action.COPY_TO_CLIPBOARD, newPass));
+            message.setHoverEvent(
+                    new net.md_5.bungee.api.chat.HoverEvent(net.md_5.bungee.api.chat.HoverEvent.Action.SHOW_TEXT,
+                            new net.md_5.bungee.api.chat.ComponentBuilder(plugin.getAuthMessage("admin-reset-hover"))
+                                    .create()));
+
+            sender.spigot().sendMessage(message);
+        } else {
+            sender.sendMessage(ChatColor.RED + "Joueur introuvable ou non enregistré.");
+        }
+    }
+
     private void handleWhitelist(CommandSender sender, String[] args) {
+        // ... existing whitelist logic ...
         if (args.length < 2) {
             sender.sendMessage(ChatColor.RED + "Usage: /auth whitelist <add|remove|list|on|off>");
             return;
@@ -166,6 +214,7 @@ public class AuthCommands implements CommandExecutor {
     }
 
     private void handleSet(CommandSender sender, String[] args) {
+        // ... existing set logic ...
         if (args.length < 3) {
             sender.sendMessage(ChatColor.RED + "Usage: /auth set <max-attempts|timeout> <value>");
             return;
@@ -190,6 +239,7 @@ public class AuthCommands implements CommandExecutor {
     private void sendAdminHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "--- ArthoAuth Admin ---");
         sender.sendMessage(ChatColor.YELLOW + "/auth unregister <player>");
+        sender.sendMessage(ChatColor.YELLOW + "/auth reset <player>");
         sender.sendMessage(ChatColor.YELLOW + "/auth whitelist <add|remove|list|on|off>");
         sender.sendMessage(ChatColor.YELLOW + "/auth set <max-attempts|timeout> <value>");
     }

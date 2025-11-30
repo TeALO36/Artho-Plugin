@@ -50,6 +50,7 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("register").setExecutor(authCmd);
         getCommand("login").setExecutor(authCmd);
         getCommand("auth").setExecutor(authCmd);
+        getCommand("changepassword").setExecutor(authCmd);
 
         // Register TabCompleter
         ArthoTabCompleter tabCompleter = new ArthoTabCompleter();

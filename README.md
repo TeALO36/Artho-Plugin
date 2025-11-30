@@ -29,6 +29,7 @@ Ce plugin est compatible avec les versions de Minecraft **1.13 à 1.20.1**.
 |----------|-------------|
 | `/register <mdp> <confirm>` | S'enregistrer sur le serveur. |
 | `/login <mdp>` | Se connecter. |
+| `/changepassword <nouveau> <confirm>` | Changer son mot de passe (Requis après reset). |
 
 ### Administration (Permission: `arthodonation.admin`)
 | Commande | Description |
@@ -39,6 +40,7 @@ Ce plugin est compatible avec les versions de Minecraft **1.13 à 1.20.1**.
 | `/don reset/reload` | Réinitialise ou recharge la configuration. |
 | `/server remove <id>` | Supprimer une suggestion. |
 | `/auth unregister <joueur>` | Désenregistrer un joueur. |
+| `/auth reset <joueur>` | Réinitialiser le mot de passe d'un joueur. |
 | `/auth whitelist <add/remove/list/on/off>` | Gérer la whitelist. |
 | `/auth set <max-attempts/timeout> <valeur>` | Configurer la sécurité. |
 

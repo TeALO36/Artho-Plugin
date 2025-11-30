@@ -58,7 +58,10 @@ public class AuthListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-        if (!authManager.isLoggedIn(player.getUniqueId())) {
+        boolean loggedIn = authManager.isLoggedIn(player.getUniqueId());
+        boolean forceChange = authManager.isForceChange(player.getUniqueId());
+
+        if (!loggedIn || forceChange) {
             // Optimize: Only check if block position changed
             if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
                     event.getFrom().getBlockZ() != event.getTo().getBlockZ() ||
@@ -66,7 +69,7 @@ public class AuthListener implements Listener {
                 event.setTo(event.getFrom());
             }
         } else {
-            // Remove blindness if logged in
+            // Remove blindness if logged in AND not force change
             if (player.hasPotionEffect(PotionEffectType.BLINDNESS)) {
                 player.removePotionEffect(PotionEffectType.BLINDNESS);
             }
@@ -75,42 +78,59 @@ public class AuthListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(AsyncPlayerChatEvent event) {
-        if (!authManager.isLoggedIn(event.getPlayer().getUniqueId())) {
+        Player player = event.getPlayer();
+        boolean loggedIn = authManager.isLoggedIn(player.getUniqueId());
+        boolean forceChange = authManager.isForceChange(player.getUniqueId());
+
+        if (!loggedIn) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(plugin.getAuthMessage("not-logged-in"));
+            player.sendMessage(plugin.getAuthMessage("not-logged-in"));
+        } else if (forceChange) {
+            event.setCancelled(true);
+            player.sendMessage(plugin.getAuthMessage("force-change-required"));
         }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        if (authManager.isLoggedIn(player.getUniqueId()))
-            return;
-
+        boolean loggedIn = authManager.isLoggedIn(player.getUniqueId());
+        boolean forceChange = authManager.isForceChange(player.getUniqueId());
         String msg = event.getMessage().toLowerCase();
-        if (!msg.startsWith("/login") && !msg.startsWith("/register")) {
-            event.setCancelled(true);
-            player.sendMessage(plugin.getAuthMessage("not-logged-in"));
+
+        if (!loggedIn) {
+            if (!msg.startsWith("/login") && !msg.startsWith("/register")) {
+                event.setCancelled(true);
+                player.sendMessage(plugin.getAuthMessage("not-logged-in"));
+            }
+        } else if (forceChange) {
+            if (!msg.startsWith("/changepassword")) {
+                event.setCancelled(true);
+                player.sendMessage(plugin.getAuthMessage("force-change-required"));
+            }
         }
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (!authManager.isLoggedIn(event.getPlayer().getUniqueId())) {
+        if (!authManager.isLoggedIn(event.getPlayer().getUniqueId())
+                || authManager.isForceChange(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-        if (!authManager.isLoggedIn(event.getPlayer().getUniqueId())) {
+        if (!authManager.isLoggedIn(event.getPlayer().getUniqueId())
+                || authManager.isForceChange(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (!authManager.isLoggedIn(event.getPlayer().getUniqueId())) {
+        if (!authManager.isLoggedIn(event.getPlayer().getUniqueId())
+                || authManager.isForceChange(event.getPlayer().getUniqueId())) {
             event.setCancelled(true);
         }
     }

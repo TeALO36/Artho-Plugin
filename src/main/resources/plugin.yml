@@ -17,12 +17,34 @@ commands:
     description: Suggestion system
     usage: /server <add|list|remove|help>
   register:
+name: ArthoDonation
+version: 1.0
+main: net.arthonetwork.donation.ArthoPlugin
+api-version: 1.13
+commands:
+  don:
+    description: Main command for ArthoDonation
+    permission: arthodonation.admin
+    usage: /don <add|link|reset|reload|help> [args]
+  ping:
+    description: Check your latency
+    usage: /ping
+  lag:
+    description: Check server or player lag sources
+    usage: /lag <joueur|serveur|help>
+  server:
+    description: Suggestion system
+    usage: /server <add|list|remove|help>
+  register:
     description: Register an account
     usage: /register <password> <confirm>
   login:
     description: Login to your account
     usage: /login <password>
   auth:
-    description: Admin authentication management
-    usage: /auth <unregister> <player>
+    description: Gérer l'authentification (Admin).
+    usage: /auth <subcommand>
     permission: arthodonation.admin
+  changepassword:
+    description: Changer son mot de passe.
+    usage: /changepassword <nouveau> <confirmation>

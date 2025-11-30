@@ -177,4 +177,39 @@ public class AuthManager {
     public int getLoginTimeout() {
         return userdataConfig.getInt("config.login-timeout", 300);
     }
+
+    // Password Reset & Force Change
+
+    public boolean isForceChange(UUID uuid) {
+        return userdataConfig.getBoolean(uuid.toString() + ".forceChange", false);
+    }
+
+    public void setForceChange(UUID uuid, boolean force) {
+        userdataConfig.set(uuid.toString() + ".forceChange", force);
+        saveUserdata();
+    }
+
+    public void changePassword(UUID uuid, String newPassword) {
+        String hash = hashPassword(newPassword);
+        userdataConfig.set(uuid.toString() + ".password", hash);
+        setForceChange(uuid, false);
+        saveUserdata();
+    }
+
+    public String resetPassword(UUID uuid) {
+        String newPassword = generateRandomPassword();
+        changePassword(uuid, newPassword);
+        setForceChange(uuid, true);
+        return newPassword;
+    }
+
+    private String generateRandomPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
+    }
 }
