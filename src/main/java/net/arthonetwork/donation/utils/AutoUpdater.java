@@ -75,11 +75,54 @@ public class AutoUpdater {
         return false;
     }
 
-    private void downloadUpdate(JsonObject json) {
+    public void downloadLatest(org.bukkit.command.CommandSender sender) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                URL url = new URL("https://api.github.com/repos/" + repo + "/releases/latest");
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
+
+                if (connection.getResponseCode() == 200) {
+                    InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+                    JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
+                    downloadUpdate(json, sender);
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Impossible de récupérer la dernière version.");
+                }
+            } catch (Exception e) {
+                sender.sendMessage(ChatColor.RED + "Erreur: " + e.getMessage());
+            }
+        });
+    }
+
+    public void downloadVersion(String tagName, org.bukkit.command.CommandSender sender) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                URL url = new URL("https://api.github.com/repos/" + repo + "/releases/tags/" + tagName);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
+
+                if (connection.getResponseCode() == 200) {
+                    InputStreamReader reader = new InputStreamReader(connection.getInputStream());
+                    JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
+                    downloadUpdate(json, sender);
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Version introuvable: " + tagName);
+                }
+            } catch (Exception e) {
+                sender.sendMessage(ChatColor.RED + "Erreur: " + e.getMessage());
+            }
+        });
+    }
+
+    private void downloadUpdate(JsonObject json, org.bukkit.command.CommandSender sender) {
         try {
             String downloadUrl = json.get("assets").getAsJsonArray().get(0).getAsJsonObject()
                     .get("browser_download_url").getAsString();
             String fileName = json.get("assets").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
+            String tagName = json.get("tag_name").getAsString();
 
             File updateFolder = new File(plugin.getDataFolder().getParentFile(), "update"); // plugins/update/
             if (!updateFolder.exists()) {
@@ -88,7 +131,9 @@ public class AutoUpdater {
 
             File outputFile = new File(updateFolder, fileName);
 
-            plugin.getLogger().info("Téléchargement de la mise à jour...");
+            if (sender != null)
+                sender.sendMessage(ChatColor.YELLOW + "Téléchargement de " + tagName + "...");
+            plugin.getLogger().info("Téléchargement de la mise à jour (" + tagName + ")...");
 
             URL url = new URL(downloadUrl);
             try (BufferedInputStream in = new BufferedInputStream(url.openStream());
@@ -100,16 +145,24 @@ public class AutoUpdater {
                 }
             }
 
-            plugin.getLogger().info(
-                    "Mise à jour téléchargée dans le dossier 'update'. Elle sera appliquée au prochain redémarrage.");
-            Bukkit.getScheduler().runTask(plugin,
-                    () -> Bukkit.broadcast(ChatColor.GREEN
-                            + "[Artho-Plugin] Une mise à jour a été téléchargée et sera installée au redémarrage.",
-                            "arthoplugin.admin"));
+            String msg = ChatColor.GREEN + "[Artho-Plugin] Version " + tagName
+                    + " téléchargée ! Redémarrez pour appliquer.";
+            plugin.getLogger().info(msg);
+            if (sender != null)
+                sender.sendMessage(msg);
+            Bukkit.broadcast(msg, "arthoplugin.admin");
 
         } catch (Exception e) {
-            plugin.getLogger().warning("Échec du téléchargement de la mise à jour : " + e.getMessage());
+            String error = "Échec du téléchargement : " + e.getMessage();
+            plugin.getLogger().warning(error);
+            if (sender != null)
+                sender.sendMessage(ChatColor.RED + error);
             e.printStackTrace();
         }
+    }
+
+    // Overload for auto-update
+    private void downloadUpdate(JsonObject json) {
+        downloadUpdate(json, null);
     }
 }
