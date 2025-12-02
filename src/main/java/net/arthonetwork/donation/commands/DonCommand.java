@@ -7,7 +7,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
 import java.util.Arrays;
-import java.util.List;
 
 public class DonCommand implements CommandExecutor {
 
@@ -30,7 +29,47 @@ public class DonCommand implements CommandExecutor {
         }
 
         String sub = args[0].toLowerCase();
+
         switch (sub) {
+            case "fix":
+                if (args.length < 2 || !isInteger(args[1])) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /don fix <minutes>");
+                    return true;
+                }
+                int fixMinutes = Integer.parseInt(args[1]);
+                if (fixMinutes <= 0) {
+                    sender.sendMessage(ChatColor.RED + "Interval must be positive!");
+                    return true;
+                }
+                plugin.setIntervals(fixMinutes * 60, fixMinutes * 60);
+                sender.sendMessage(ChatColor.GREEN + "Broadcast interval set to fixed " + fixMinutes + " minutes.");
+                break;
+            case "variable":
+                if (args.length < 2 || !args[1].contains("-")) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /don variable <min>-<max>");
+                    return true;
+                }
+                String[] parts = args[1].split("-");
+                if (parts.length != 2 || !isInteger(parts[0]) || !isInteger(parts[1])) {
+                    sender.sendMessage(ChatColor.RED + "Invalid format! Use: 5-10");
+                    return true;
+                }
+                int min = Integer.parseInt(parts[0]);
+                int max = Integer.parseInt(parts[1]);
+
+                if (min <= 0 || max <= 0) {
+                    sender.sendMessage(ChatColor.RED + "Intervals must be positive!");
+                    return true;
+                }
+                if (min > max) {
+                    int temp = min;
+                    min = max;
+                    max = temp;
+                }
+                plugin.setIntervals(min * 60, max * 60);
+                sender.sendMessage(ChatColor.GREEN + "Broadcast interval set to random between " + min + " and " + max
+                        + " minutes.");
+                break;
             case "add":
                 if (args.length < 2) {
                     sender.sendMessage(ChatColor.RED + "Usage: /don add <message>");
@@ -74,8 +113,21 @@ public class DonCommand implements CommandExecutor {
         return true;
     }
 
+    private boolean isInteger(String s) {
+        try {
+            Integer.parseInt(s);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "--- Artho-Plugin Help ---");
+        sender.sendMessage(
+                ChatColor.YELLOW + "/don fix <minutes> " + ChatColor.WHITE + "- Set fixed broadcast interval.");
+        sender.sendMessage(
+                ChatColor.YELLOW + "/don variable <min>-<max> " + ChatColor.WHITE + "- Set random interval range.");
         sender.sendMessage(ChatColor.YELLOW + "/don add <message> " + ChatColor.WHITE + "- Add a donation message.");
         sender.sendMessage(ChatColor.YELLOW + "/don link <url> " + ChatColor.WHITE + "- Set the donation link.");
         sender.sendMessage(ChatColor.YELLOW + "/don enable " + ChatColor.WHITE + "- Enable broadcasting.");

@@ -48,3 +48,9 @@ commands:
   changepassword:
     description: Changer son mot de passe.
     usage: /changepassword <nouveau> <confirmation>
+  artho:
+    description: Afficher l'aide globale du plugin.
+    usage: /artho
+  arthonetwork:
+    description: Afficher l'aide globale du plugin.
+    usage: /arthonetwork

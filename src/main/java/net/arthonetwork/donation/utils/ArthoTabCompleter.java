@@ -26,9 +26,16 @@ public class ArthoTabCompleter implements TabCompleter {
         if (command.getName().equalsIgnoreCase("don")) {
             if (args.length == 1) {
                 if (sender.hasPermission("arthoplugin.admin") || sender.isOp()) {
-                    commands.addAll(Arrays.asList("add", "link", "reset", "reload", "help", "enable", "disable"));
+                    commands.addAll(Arrays.asList("add", "link", "reset", "reload", "help", "enable", "disable", "fix",
+                            "variable"));
                 } else {
                     commands.add("help");
+                }
+            } else if (args.length == 2) {
+                if (args[0].equalsIgnoreCase("fix")) {
+                    commands.addAll(Arrays.asList("5", "10", "15", "30", "60"));
+                } else if (args[0].equalsIgnoreCase("variable")) {
+                    commands.addAll(Arrays.asList("5-10", "10-20", "15-30"));
                 }
             }
         } else if (command.getName().equalsIgnoreCase("lag")) {

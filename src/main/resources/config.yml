@@ -1,8 +1,6 @@
-# Interval in seconds
-interval: 300
-
-# Interval in seconds
-interval: 300
+# Interval range in seconds (random between min and max)
+interval-min: 300
+interval-max: 600
 
 # The donation link
 donation-link: "https://buy.stripe.com/14k8Al4ki5tl8HmfZb"

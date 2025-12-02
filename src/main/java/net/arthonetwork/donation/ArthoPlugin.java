@@ -25,7 +25,8 @@ public class ArthoPlugin extends JavaPlugin {
 
     private List<String> messages;
     private String donationLink;
-    private int interval;
+    private int minInterval;
+    private int maxInterval;
     private BukkitRunnable task;
     private SuggestionManager suggestionManager;
     private AuthManager authManager;
@@ -45,6 +46,11 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("ping").setExecutor(new PingCommand());
         getCommand("lag").setExecutor(new LagCommand());
         getCommand("server").setExecutor(new ServerCommand(suggestionManager));
+
+        net.arthonetwork.donation.commands.ArthoCommand arthoCmd = new net.arthonetwork.donation.commands.ArthoCommand(
+                this);
+        getCommand("artho").setExecutor(arthoCmd);
+        getCommand("arthonetwork").setExecutor(arthoCmd);
 
         AuthCommands authCmd = new AuthCommands(this, authManager);
         getCommand("register").setExecutor(authCmd);
@@ -93,7 +99,17 @@ public class ArthoPlugin extends JavaPlugin {
         FileConfiguration config = getConfig();
         messages = config.getStringList("messages");
         donationLink = config.getString("donation-link");
-        interval = config.getInt("interval");
+
+        // Load min/max, fallback to old 'interval' if missing
+        if (config.contains("interval-min") && config.contains("interval-max")) {
+            minInterval = config.getInt("interval-min");
+            maxInterval = config.getInt("interval-max");
+        } else {
+            int legacyInterval = config.getInt("interval", 300);
+            minInterval = legacyInterval;
+            maxInterval = legacyInterval;
+        }
+
         donationEnabled = config.getBoolean("donation-enabled", true);
     }
 
@@ -110,18 +126,33 @@ public class ArthoPlugin extends JavaPlugin {
         if (!donationEnabled)
             return;
 
+        scheduleNextBroadcast();
+    }
+
+    private void scheduleNextBroadcast() {
+        if (!donationEnabled)
+            return;
+
+        long delay;
+        if (minInterval == maxInterval) {
+            delay = minInterval * 20L;
+        } else {
+            delay = (minInterval + new Random().nextInt(maxInterval - minInterval + 1)) * 20L;
+        }
+
         task = new BukkitRunnable() {
             @Override
             public void run() {
-                if (messages.isEmpty())
-                    return;
-                String randomMsg = messages.get(new Random().nextInt(messages.size()));
-                String fullMsg = ChatColor.translateAlternateColorCodes('&', randomMsg.replace("$link", donationLink));
-                Bukkit.broadcastMessage(fullMsg);
+                if (!messages.isEmpty()) {
+                    String randomMsg = messages.get(new Random().nextInt(messages.size()));
+                    String fullMsg = ChatColor.translateAlternateColorCodes('&',
+                            randomMsg.replace("$link", donationLink));
+                    Bukkit.broadcastMessage(fullMsg);
+                }
+                scheduleNextBroadcast(); // Schedule next recursively
             }
         };
-        // Interval is in seconds, convert to ticks (20 ticks = 1 second)
-        task.runTaskTimer(this, 0L, interval * 20L);
+        task.runTaskLater(this, delay);
     }
 
     public void setDonationEnabled(boolean enabled) {
@@ -141,6 +172,15 @@ public class ArthoPlugin extends JavaPlugin {
         this.donationLink = link;
         getConfig().set("donation-link", link);
         saveConfig();
+    }
+
+    public void setIntervals(int min, int max) {
+        this.minInterval = min;
+        this.maxInterval = max;
+        getConfig().set("interval-min", min);
+        getConfig().set("interval-max", max);
+        saveConfig();
+        startBroadcasting(); // Restart with new intervals
     }
 
     public void resetConfig() {
