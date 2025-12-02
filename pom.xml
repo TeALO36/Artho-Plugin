@@ -4,7 +4,7 @@
 
   <groupId>net.arthonetwork</groupId>
   <artifactId>donation-plugin</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.1</version>
   <packaging>jar</packaging>
 
   <name>Artho-Plugin</name>
@@ -33,6 +33,7 @@
   </dependencies>
 
   <build>
+    <finalName>Artho-Plugin</finalName>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
