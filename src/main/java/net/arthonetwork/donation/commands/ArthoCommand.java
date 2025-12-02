@@ -21,7 +21,7 @@ public class ArthoCommand implements CommandExecutor {
                 sender.sendMessage(ChatColor.RED + "Permission refusée.");
                 return true;
             }
-            if (args.length == 2 && args[1].equalsIgnoreCase("auto")) {
+            if (args.length == 1 || (args.length == 2 && args[1].equalsIgnoreCase("auto"))) {
                 new net.arthonetwork.donation.utils.AutoUpdater(plugin).downloadLatest(sender);
                 return true;
             }
@@ -29,7 +29,7 @@ public class ArthoCommand implements CommandExecutor {
                 new net.arthonetwork.donation.utils.AutoUpdater(plugin).downloadVersion(args[2], sender);
                 return true;
             }
-            sender.sendMessage(ChatColor.RED + "Usage: /artho update <auto | rollback <version>>");
+            sender.sendMessage(ChatColor.RED + "Usage: /artho update [auto | rollback <version>]");
             return true;
         }
 
@@ -73,7 +73,8 @@ public class ArthoCommand implements CommandExecutor {
 
         if (sender.hasPermission("arthoplugin.admin")) {
             sender.sendMessage(ChatColor.GOLD + "➤ Mises à jour:");
-            sender.sendMessage(ChatColor.RED + "  /artho update auto " + ChatColor.WHITE + "- Forcer la mise à jour.");
+            sender.sendMessage(
+                    ChatColor.RED + "  /artho update [auto] " + ChatColor.WHITE + "- Forcer la mise à jour.");
             sender.sendMessage(ChatColor.RED + "  /artho update rollback <version> " + ChatColor.WHITE
                     + "- Revenir à une version.");
         }

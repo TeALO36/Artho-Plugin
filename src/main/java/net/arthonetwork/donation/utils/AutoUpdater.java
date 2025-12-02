@@ -95,7 +95,14 @@ public class AutoUpdater {
             try {
                 String latestTag = fetchLatestTag();
                 if (latestTag != null) {
-                    downloadUpdate(latestTag, sender);
+                    String latestVersion = latestTag.replace("v", "");
+                    if (isNewer(latestVersion, currentVersion)) {
+                        downloadUpdate(latestTag, sender);
+                    } else {
+                        if (sender != null) {
+                            sender.sendMessage(ChatColor.GREEN + "Le plugin est déjà à jour (" + currentVersion + ").");
+                        }
+                    }
                 } else {
                     if (sender != null)
                         sender.sendMessage(ChatColor.RED + "Impossible de trouver la dernière version.");
