@@ -36,6 +36,11 @@ public class AutoUpdater {
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
 
+                String token = plugin.getConfig().getString("update.github-token");
+                if (token != null && !token.isEmpty()) {
+                    connection.setRequestProperty("Authorization", "token " + token);
+                }
+
                 if (connection.getResponseCode() == 200) {
                     InputStreamReader reader = new InputStreamReader(connection.getInputStream());
                     JsonObject json = new JsonParser().parse(reader).getAsJsonObject();

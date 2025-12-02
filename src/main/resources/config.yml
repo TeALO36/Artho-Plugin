@@ -19,6 +19,8 @@ messages:
 update:
   check: true
   auto-download: true
+  # Optional: GitHub Token to bypass API rate limits (Personal Access Token)
+  github-token: ""
 
 
 auth:
