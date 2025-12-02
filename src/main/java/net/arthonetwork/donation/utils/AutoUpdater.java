@@ -1,7 +1,5 @@
 package net.arthonetwork.donation.utils;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import net.arthonetwork.donation.ArthoPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -9,7 +7,6 @@ import org.bukkit.ChatColor;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -31,37 +28,50 @@ public class AutoUpdater {
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                URL url = new URL("https://api.github.com/repos/" + repo + "/releases/latest");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
+                String latestTag = fetchLatestTag();
+                if (latestTag == null)
+                    return;
 
-                String token = plugin.getConfig().getString("update.github-token");
-                if (token != null && !token.isEmpty()) {
-                    connection.setRequestProperty("Authorization", "token " + token);
-                }
+                String latestVersion = latestTag.replace("v", "");
 
-                if (connection.getResponseCode() == 200) {
-                    InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-                    JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
-                    String latestTag = json.get("tag_name").getAsString();
-                    String latestVersion = latestTag.replace("v", "");
-
-                    if (isNewer(latestVersion, currentVersion)) {
-                        plugin.getLogger().info("Une nouvelle version est disponible : " + latestTag);
-                        if (plugin.getConfig().getBoolean("update.auto-download", true)) {
-                            downloadUpdate(json);
-                        } else {
-                            plugin.getLogger().info("Téléchargez-la ici : " + json.get("html_url").getAsString());
-                        }
+                if (isNewer(latestVersion, currentVersion)) {
+                    plugin.getLogger().info("Une nouvelle version est disponible : " + latestTag);
+                    if (plugin.getConfig().getBoolean("update.auto-download", true)) {
+                        downloadUpdate(latestTag, null);
                     } else {
-                        plugin.getLogger().info("Le plugin est à jour.");
+                        plugin.getLogger()
+                                .info("Téléchargez-la ici : https://github.com/" + repo + "/releases/tag/" + latestTag);
                     }
+                } else {
+                    plugin.getLogger().info("Le plugin est à jour.");
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning("Impossible de vérifier les mises à jour : " + e.getMessage());
             }
         });
+    }
+
+    private String fetchLatestTag() {
+        try {
+            URL url = new URL("https://github.com/" + repo + "/releases/latest");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setInstanceFollowRedirects(false); // Don't follow, just get the Location header
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
+
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 302 || responseCode == 301) {
+                String location = connection.getHeaderField("Location");
+                // Location format: https://github.com/TeALO36/Artho-Plugin/releases/tag/v0.10.2
+                return location.substring(location.lastIndexOf("/") + 1);
+            } else {
+                plugin.getLogger().warning("Impossible de récupérer la dernière version (Code: " + responseCode + ")");
+                return null;
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Erreur lors de la récupération du tag : " + e.getMessage());
+            return null;
+        }
     }
 
     private boolean isNewer(String latest, String current) {
@@ -83,80 +93,34 @@ public class AutoUpdater {
     public void downloadLatest(org.bukkit.command.CommandSender sender) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
-                URL url = new URL("https://api.github.com/repos/" + repo + "/releases/latest");
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
-
-                int responseCode = connection.getResponseCode();
-                if (responseCode == 200) {
-                    InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-                    JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
-                    downloadUpdate(json, sender);
+                String latestTag = fetchLatestTag();
+                if (latestTag != null) {
+                    downloadUpdate(latestTag, sender);
                 } else {
-                    String errorMsg = "Erreur GitHub API: " + responseCode;
-                    try {
-                        InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream());
-                        JsonObject errorJson = new JsonParser().parse(errorReader).getAsJsonObject();
-                        if (errorJson.has("message")) {
-                            errorMsg += " - " + errorJson.get("message").getAsString();
-                        }
-                    } catch (Exception ignored) {
-                    }
-
                     if (sender != null)
-                        sender.sendMessage(ChatColor.RED + errorMsg);
-                    plugin.getLogger().warning(errorMsg);
+                        sender.sendMessage(ChatColor.RED + "Impossible de trouver la dernière version.");
                 }
             } catch (Exception e) {
-                String msg = "Erreur de connexion: " + e.getMessage();
                 if (sender != null)
-                    sender.sendMessage(ChatColor.RED + msg);
-                plugin.getLogger().warning(msg);
+                    sender.sendMessage(ChatColor.RED + "Erreur: " + e.getMessage());
             }
         });
     }
 
     public void downloadVersion(String tagName, org.bukkit.command.CommandSender sender) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            try {
-                URL url = new URL("https://api.github.com/repos/" + repo + "/releases/tags/" + tagName);
-                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("GET");
-                connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
-
-                int responseCode = connection.getResponseCode();
-                if (responseCode == 200) {
-                    InputStreamReader reader = new InputStreamReader(connection.getInputStream());
-                    JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
-                    downloadUpdate(json, sender);
-                } else {
-                    String errorMsg = "Version introuvable ou erreur API: " + responseCode;
-                    try {
-                        InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream());
-                        JsonObject errorJson = new JsonParser().parse(errorReader).getAsJsonObject();
-                        if (errorJson.has("message")) {
-                            errorMsg += " - " + errorJson.get("message").getAsString();
-                        }
-                    } catch (Exception ignored) {
-                    }
-
-                    if (sender != null)
-                        sender.sendMessage(ChatColor.RED + errorMsg);
-                    plugin.getLogger().warning(errorMsg);
-                }
-            } catch (Exception e) {
-                sender.sendMessage(ChatColor.RED + "Erreur: " + e.getMessage());
-            }
+            downloadUpdate(tagName, sender);
         });
     }
 
-    private void downloadUpdate(JsonObject json, org.bukkit.command.CommandSender sender) {
+    private void downloadUpdate(String tagName, org.bukkit.command.CommandSender sender) {
         try {
-            String downloadUrl = json.get("assets").getAsJsonArray().get(0).getAsJsonObject()
-                    .get("browser_download_url").getAsString();
-            String fileName = json.get("assets").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
-            String tagName = json.get("tag_name").getAsString();
+            // Construct URL manually:
+            // https://github.com/TeALO36/Artho-Plugin/releases/download/v0.10.2/Artho-Plugin.jar
+            // Note: This assumes the jar name is always Artho-Plugin.jar. If it changes,
+            // this breaks.
+            String downloadUrl = "https://github.com/" + repo + "/releases/download/" + tagName + "/Artho-Plugin.jar";
+            String fileName = "Artho-Plugin.jar"; // Or "Artho-Plugin-" + tagName + ".jar" if you prefer versioned names
 
             File updateFolder = new File(plugin.getDataFolder().getParentFile(), "update"); // plugins/update/
             if (!updateFolder.exists()) {
@@ -170,7 +134,13 @@ public class AutoUpdater {
             plugin.getLogger().info("Téléchargement de la mise à jour (" + tagName + ")...");
 
             URL url = new URL(downloadUrl);
-            try (BufferedInputStream in = new BufferedInputStream(url.openStream());
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
+            // Follow redirects for the download itself (GitHub releases redirect to
+            // AWS/objects)
+            connection.setInstanceFollowRedirects(true);
+
+            try (BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
                     FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
                 byte dataBuffer[] = new byte[1024];
                 int bytesRead;
@@ -187,16 +157,11 @@ public class AutoUpdater {
             Bukkit.broadcast(msg, "arthoplugin.admin");
 
         } catch (Exception e) {
-            String error = "Échec du téléchargement : " + e.getMessage();
+            String error = "Échec du téléchargement (" + tagName + ") : " + e.getMessage();
             plugin.getLogger().warning(error);
             if (sender != null)
                 sender.sendMessage(ChatColor.RED + error);
-            e.printStackTrace();
+            // e.printStackTrace(); // Optional: keep logs clean
         }
-    }
-
-    // Overload for auto-update
-    private void downloadUpdate(JsonObject json) {
-        downloadUpdate(json, null);
     }
 }
