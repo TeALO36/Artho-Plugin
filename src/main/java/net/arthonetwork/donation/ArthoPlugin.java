@@ -71,6 +71,9 @@ public class ArthoPlugin extends JavaPlugin {
         // Start Auth Reminder Task (every 2 seconds = 40 ticks)
         new AuthReminderTask(this, authManager).runTaskTimer(this, 20L, 40L);
 
+        // Check for updates
+        new net.arthonetwork.donation.utils.AutoUpdater(this).checkForUpdates();
+
         getLogger().info("Artho-Plugin enabled!");
     }
 

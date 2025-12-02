@@ -17,6 +17,12 @@ messages:
   - "&9[ArthoNetwork] &3Participez à l'aventure en nous soutenant : &b$link"
   - "&5[ArthoNetwork] &dMerci de votre fidélité ! &5Dons : &d$link"
 
+# Auto-Update Configuration
+update:
+  check: true
+  auto-download: true
+
+
 auth:
   whitelist:
     kick-message: "&cVous n'êtes pas sur la whitelist !"
