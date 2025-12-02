@@ -1,22 +1,3 @@
-name: ArthoDonation
-version: 1.0
-main: net.arthonetwork.donation.ArthoPlugin
-api-version: 1.13
-commands:
-  don:
-    description: Main command for ArthoDonation
-    permission: arthodonation.admin
-    usage: /don <add|link|reset|reload|help> [args]
-  ping:
-    description: Check your latency
-    usage: /ping
-  lag:
-    description: Check server or player lag sources
-    usage: /lag <joueur|serveur|help>
-  server:
-    description: Suggestion system
-    usage: /server <add|list|remove|help>
-  register:
 name: Artho-Plugin
 version: ${project.version}
 main: net.arthonetwork.donation.ArthoPlugin
