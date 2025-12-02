@@ -1,8 +1,10 @@
 package net.arthonetwork.donation.utils;
 
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import java.util.ArrayList;
@@ -17,6 +19,10 @@ public class ArthoTabCompleter implements TabCompleter {
         List<String> completions = new ArrayList<>();
         List<String> commands = new ArrayList<>();
 
+        if (args.length == 0)
+            return completions;
+        String currentArg = args[args.length - 1];
+
         if (command.getName().equalsIgnoreCase("don")) {
             if (args.length == 1) {
                 if (sender.hasPermission("arthoplugin.admin") || sender.isOp()) {
@@ -28,6 +34,8 @@ public class ArthoTabCompleter implements TabCompleter {
         } else if (command.getName().equalsIgnoreCase("lag")) {
             if (args.length == 1) {
                 commands.addAll(Arrays.asList("joueur", "serveur", "help"));
+            } else if (args.length == 2 && args[0].equalsIgnoreCase("joueur")) {
+                return null; // Return null to let Bukkit suggest online players
             }
         } else if (command.getName().equalsIgnoreCase("server")) {
             if (args.length == 1) {
@@ -45,12 +53,19 @@ public class ArthoTabCompleter implements TabCompleter {
                         commands.addAll(Arrays.asList("add", "remove", "list", "on", "off"));
                     } else if (args[0].equalsIgnoreCase("set")) {
                         commands.addAll(Arrays.asList("max-attempts", "timeout"));
+                    } else if (args[0].equalsIgnoreCase("unregister") || args[0].equalsIgnoreCase("reset")) {
+                        return null; // Suggest players
+                    }
+                } else if (args.length == 3) {
+                    if (args[0].equalsIgnoreCase("whitelist")
+                            && (args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove"))) {
+                        return null; // Suggest players
                     }
                 }
             }
         }
 
-        StringUtil.copyPartialMatches(args[0], commands, completions);
+        StringUtil.copyPartialMatches(currentArg, commands, completions);
         Collections.sort(completions);
         return completions;
     }
