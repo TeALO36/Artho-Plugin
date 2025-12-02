@@ -83,15 +83,31 @@ public class AutoUpdater {
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
 
-                if (connection.getResponseCode() == 200) {
+                int responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
                     InputStreamReader reader = new InputStreamReader(connection.getInputStream());
                     JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
                     downloadUpdate(json, sender);
                 } else {
-                    sender.sendMessage(ChatColor.RED + "Impossible de récupérer la dernière version.");
+                    String errorMsg = "Erreur GitHub API: " + responseCode;
+                    try {
+                        InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream());
+                        JsonObject errorJson = new JsonParser().parse(errorReader).getAsJsonObject();
+                        if (errorJson.has("message")) {
+                            errorMsg += " - " + errorJson.get("message").getAsString();
+                        }
+                    } catch (Exception ignored) {
+                    }
+
+                    if (sender != null)
+                        sender.sendMessage(ChatColor.RED + errorMsg);
+                    plugin.getLogger().warning(errorMsg);
                 }
             } catch (Exception e) {
-                sender.sendMessage(ChatColor.RED + "Erreur: " + e.getMessage());
+                String msg = "Erreur de connexion: " + e.getMessage();
+                if (sender != null)
+                    sender.sendMessage(ChatColor.RED + msg);
+                plugin.getLogger().warning(msg);
             }
         });
     }
@@ -104,12 +120,25 @@ public class AutoUpdater {
                 connection.setRequestMethod("GET");
                 connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
 
-                if (connection.getResponseCode() == 200) {
+                int responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
                     InputStreamReader reader = new InputStreamReader(connection.getInputStream());
                     JsonObject json = new JsonParser().parse(reader).getAsJsonObject();
                     downloadUpdate(json, sender);
                 } else {
-                    sender.sendMessage(ChatColor.RED + "Version introuvable: " + tagName);
+                    String errorMsg = "Version introuvable ou erreur API: " + responseCode;
+                    try {
+                        InputStreamReader errorReader = new InputStreamReader(connection.getErrorStream());
+                        JsonObject errorJson = new JsonParser().parse(errorReader).getAsJsonObject();
+                        if (errorJson.has("message")) {
+                            errorMsg += " - " + errorJson.get("message").getAsString();
+                        }
+                    } catch (Exception ignored) {
+                    }
+
+                    if (sender != null)
+                        sender.sendMessage(ChatColor.RED + errorMsg);
+                    plugin.getLogger().warning(errorMsg);
                 }
             } catch (Exception e) {
                 sender.sendMessage(ChatColor.RED + "Erreur: " + e.getMessage());
