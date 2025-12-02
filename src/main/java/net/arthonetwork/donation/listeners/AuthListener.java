@@ -92,19 +92,37 @@ public class AuthListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onCommand(PlayerCommandPreprocessEvent event) {
+    public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        String message = event.getMessage();
+        String[] args = message.split(" ");
+        String command = args[0].toLowerCase();
+
+        // Handle console logging security
+        if (command.equals("/login") || command.equals("/register") || command.equals("/changepassword")) {
+            event.setCancelled(true);
+            plugin.getLogger().info(event.getPlayer().getName() + " issued server command: " + command + " *****");
+
+            String cmdName = command.substring(1);
+            org.bukkit.command.PluginCommand pluginCommand = plugin.getCommand(cmdName);
+
+            if (pluginCommand != null) {
+                String[] cmdArgs = new String[args.length - 1];
+                System.arraycopy(args, 1, cmdArgs, 0, args.length - 1);
+                pluginCommand.execute(event.getPlayer(), cmdName, cmdArgs);
+            }
+            return; // Don't process further logic for these commands here
+        }
+
+        // Handle auth restrictions
         Player player = event.getPlayer();
         boolean loggedIn = authManager.isLoggedIn(player.getUniqueId());
         boolean forceChange = authManager.isForceChange(player.getUniqueId());
-        String msg = event.getMessage().toLowerCase();
 
         if (!loggedIn) {
-            if (!msg.startsWith("/login") && !msg.startsWith("/register")) {
-                event.setCancelled(true);
-                player.sendMessage(plugin.getAuthMessage("not-logged-in"));
-            }
+            event.setCancelled(true);
+            player.sendMessage(plugin.getAuthMessage("not-logged-in"));
         } else if (forceChange) {
-            if (!msg.startsWith("/changepassword")) {
+            if (!command.equals("/changepassword")) {
                 event.setCancelled(true);
                 player.sendMessage(plugin.getAuthMessage("force-change-required"));
             }

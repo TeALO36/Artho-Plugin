@@ -69,14 +69,16 @@ public class AuthCommands implements CommandExecutor {
             }
 
             String ip = player.getAddress().getAddress().getHostAddress();
-            if (!authManager.checkIpLimit(ip)) {
+            if (authManager.isIpBlocked(ip)) {
                 player.kickPlayer(ChatColor.RED + "Trop de tentatives de connexion. Réessayez plus tard.");
                 return true;
             }
 
             if (authManager.login(uuid, args[0])) {
+                authManager.resetAttempts(ip);
                 player.sendMessage(plugin.getAuthMessage("success-login"));
             } else {
+                authManager.incrementAttempts(ip);
                 player.sendMessage(plugin.getAuthMessage("wrong-password"));
             }
             return true;

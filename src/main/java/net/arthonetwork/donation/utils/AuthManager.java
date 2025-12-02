@@ -103,24 +103,29 @@ public class AuthManager {
         }
     }
 
-    public boolean checkIpLimit(String ip) {
+    public boolean isIpBlocked(String ip) {
         if (ipTimeouts.containsKey(ip)) {
             if (System.currentTimeMillis() < ipTimeouts.get(ip)) {
-                return false;
+                return true;
             } else {
                 ipTimeouts.remove(ip);
                 ipAttempts.remove(ip);
             }
         }
+        return false;
+    }
 
-        int attempts = ipAttempts.getOrDefault(ip, 0);
+    public void incrementAttempts(String ip) {
+        int attempts = ipAttempts.getOrDefault(ip, 0) + 1;
+        ipAttempts.put(ip, attempts);
         if (attempts >= getMaxAttempts()) {
             ipTimeouts.put(ip, System.currentTimeMillis() + (getLoginTimeout() * 1000L));
-            return false;
         }
+    }
 
-        ipAttempts.put(ip, attempts + 1);
-        return true;
+    public void resetAttempts(String ip) {
+        ipAttempts.remove(ip);
+        ipTimeouts.remove(ip);
     }
 
     // Whitelist & Config Methods
