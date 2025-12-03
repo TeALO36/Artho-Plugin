@@ -79,7 +79,7 @@ public class AuthManager {
     private String hashPassword(String password) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes());
+            byte[] hash = digest.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             StringBuilder hexString = new StringBuilder();
             for (byte b : hash) {
                 String hex = Integer.toHexString(0xff & b);
@@ -172,6 +172,23 @@ public class AuthManager {
 
     public int getMaxAttempts() {
         return userdataConfig.getInt("config.max-attempts", 5);
+    }
+
+    public boolean isAuthEnabled() {
+        return userdataConfig.getBoolean("config.auth-enabled", true);
+    }
+
+    public void setAuthEnabled(boolean enabled) {
+        userdataConfig.set("config.auth-enabled", enabled);
+        saveUserdata();
+    }
+
+    public long getRemainingTime(String ip) {
+        if (ipTimeouts.containsKey(ip)) {
+            long remaining = ipTimeouts.get(ip) - System.currentTimeMillis();
+            return remaining > 0 ? remaining / 1000 : 0;
+        }
+        return 0;
     }
 
     public void setLoginTimeout(int seconds) {

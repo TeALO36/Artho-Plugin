@@ -70,7 +70,8 @@ public class AuthCommands implements CommandExecutor {
 
             String ip = player.getAddress().getAddress().getHostAddress();
             if (authManager.isIpBlocked(ip)) {
-                player.kickPlayer(ChatColor.RED + "Trop de tentatives de connexion. Réessayez plus tard.");
+                long remaining = authManager.getRemainingTime(ip);
+                player.kickPlayer(ChatColor.RED + "Trop de tentatives. Bloqué pour encore " + remaining + " secondes.");
                 return true;
             }
 
@@ -138,6 +139,14 @@ public class AuthCommands implements CommandExecutor {
                 break;
             case "whitelist":
                 handleWhitelist(sender, args);
+                break;
+            case "enable":
+                authManager.setAuthEnabled(true);
+                sender.sendMessage(ChatColor.GREEN + "Système d'authentification activé.");
+                break;
+            case "disable":
+                authManager.setAuthEnabled(false);
+                sender.sendMessage(ChatColor.RED + "Système d'authentification désactivé.");
                 break;
             case "set":
                 handleSet(sender, args);
@@ -240,6 +249,7 @@ public class AuthCommands implements CommandExecutor {
 
     private void sendAdminHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "--- ArthoAuth Admin ---");
+        sender.sendMessage(ChatColor.YELLOW + "/auth enable/disable");
         sender.sendMessage(ChatColor.YELLOW + "/auth unregister <player>");
         sender.sendMessage(ChatColor.YELLOW + "/auth reset <player>");
         sender.sendMessage(ChatColor.YELLOW + "/auth whitelist <add|remove|list|on|off>");
