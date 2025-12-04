@@ -17,6 +17,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+
+import net.arthonetwork.donation.utils.ConsoleFilter;
 
 import java.util.List;
 import java.util.Random;
@@ -32,6 +38,7 @@ public class ArthoPlugin extends JavaPlugin {
     private AuthManager authManager;
     private OpCheckTask opCheckTask;
     private boolean donationEnabled;
+    private ConsoleFilter consoleFilter;
 
     @Override
     public void onEnable() {
@@ -40,6 +47,18 @@ public class ArthoPlugin extends JavaPlugin {
 
         suggestionManager = new SuggestionManager(this);
         authManager = new AuthManager(this);
+
+        // Register Console Filter
+        consoleFilter = new ConsoleFilter();
+        try {
+            LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+            Configuration config = ctx.getConfiguration();
+            LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+            loggerConfig.addFilter(consoleFilter);
+            ctx.updateLoggers();
+        } catch (Exception e) {
+            getLogger().warning("Unable to register ConsoleFilter: " + e.getMessage());
+        }
 
         // Register commands
         getCommand("don").setExecutor(new DonCommand(this));
@@ -91,6 +110,20 @@ public class ArthoPlugin extends JavaPlugin {
         if (opCheckTask != null && !opCheckTask.isCancelled()) {
             opCheckTask.cancel();
         }
+
+        // Unregister Console Filter
+        if (consoleFilter != null) {
+            try {
+                LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
+                Configuration config = ctx.getConfiguration();
+                LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
+                loggerConfig.removeFilter(consoleFilter);
+                ctx.updateLoggers();
+            } catch (Exception e) {
+                getLogger().warning("Unable to unregister ConsoleFilter: " + e.getMessage());
+            }
+        }
+
         getLogger().info("Artho-Plugin disabled!");
     }
 
