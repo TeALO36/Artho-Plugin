@@ -9,7 +9,7 @@ commands:
     usage: /don <add|link|reset|reload|help> [args]
   ping:
     description: Check your latency
-    usage: /ping
+    usage: /ping [joueur]
   lag:
     description: Check server or player lag sources
     usage: /lag <joueur|serveur|help>

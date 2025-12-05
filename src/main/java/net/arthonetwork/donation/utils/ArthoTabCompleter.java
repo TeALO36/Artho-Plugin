@@ -70,6 +70,12 @@ public class ArthoTabCompleter implements TabCompleter {
                     }
                 }
             }
+        } else if (command.getName().equalsIgnoreCase("ping")) {
+            if (args.length == 1) {
+                if (sender.hasPermission("arthoplugin.ping.others") || sender.isOp()) {
+                    return null; // Suggest players
+                }
+            }
         }
 
         StringUtil.copyPartialMatches(currentArg, commands, completions);

@@ -9,6 +9,7 @@ import net.arthonetwork.donation.listeners.AuthListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
 import net.arthonetwork.donation.tasks.AuthReminderTask;
+import net.arthonetwork.donation.tasks.TabListUpdateTask;
 import net.arthonetwork.donation.utils.ArthoTabCompleter;
 import net.arthonetwork.donation.utils.AuthManager;
 import net.arthonetwork.donation.utils.SuggestionManager;
@@ -83,6 +84,7 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("lag").setTabCompleter(tabCompleter);
         getCommand("server").setTabCompleter(tabCompleter);
         getCommand("auth").setTabCompleter(tabCompleter);
+        getCommand("ping").setTabCompleter(tabCompleter);
 
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
@@ -95,6 +97,9 @@ public class ArthoPlugin extends JavaPlugin {
 
         // Start Auth Reminder Task (every 2 seconds = 40 ticks)
         new AuthReminderTask(this, authManager).runTaskTimer(this, 20L, 40L);
+
+        // Start TabList Update Task (every 1 second = 20 ticks)
+        new TabListUpdateTask().runTaskTimer(this, 20L, 20L);
 
         // Check for updates
         new net.arthonetwork.donation.utils.AutoUpdater(this).checkForUpdates();

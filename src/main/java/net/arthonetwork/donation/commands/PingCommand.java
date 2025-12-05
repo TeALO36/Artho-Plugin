@@ -10,32 +10,57 @@ public class PingCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (sender instanceof Player) {
-            Player player = (Player) sender;
-            // Note: getPing() is available in newer Spigot versions (1.12+ approx).
-            // If strictly 1.8, we'd need NMS, but assuming modern version based on previous
-            // context.
-            int ping = 0;
-            try {
-                // Reflection or direct method if available.
-                // For broad compatibility without NMS, we can try the method directly.
-                // If it fails, we catch it.
-                ping = player.getPing();
-            } catch (NoSuchMethodError e) {
-                sender.sendMessage(ChatColor.RED + "Ping feature not supported on this server version.");
+        if (args.length > 0) {
+            // Check for other player
+            if (!sender.isOp() && !sender.hasPermission("arthoplugin.ping.others")) {
+                sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission de voir le ping des autres joueurs.");
                 return true;
             }
 
-            ChatColor color = ChatColor.GREEN;
-            if (ping > 100)
-                color = ChatColor.YELLOW;
-            if (ping > 250)
-                color = ChatColor.RED;
+            Player target = org.bukkit.Bukkit.getPlayer(args[0]);
+            if (target == null) {
+                sender.sendMessage(ChatColor.RED + "Joueur introuvable.");
+                return true;
+            }
 
-            sender.sendMessage(ChatColor.GRAY + "Pong! Your ping is " + color + ping + "ms");
+            sendPingMessage(sender, target.getName(), getPlayerPing(target));
+            return true;
+        }
+
+        if (sender instanceof Player) {
+            Player player = (Player) sender;
+            sendPingMessage(sender, "Votre", getPlayerPing(player));
         } else {
-            sender.sendMessage(ChatColor.RED + "Console has 0ms ping!");
+            sender.sendMessage(ChatColor.RED + "La console a 0ms de ping !");
         }
         return true;
+    }
+
+    private int getPlayerPing(Player player) {
+        try {
+            return player.getPing();
+        } catch (NoSuchMethodError e) {
+            return -1; // Not supported
+        }
+    }
+
+    private void sendPingMessage(CommandSender sender, String targetName, int ping) {
+        if (ping == -1) {
+            sender.sendMessage(ChatColor.RED + "Fonction ping non supportée sur cette version.");
+            return;
+        }
+
+        ChatColor color = ChatColor.GREEN;
+        if (ping > 100)
+            color = ChatColor.YELLOW;
+        if (ping > 250)
+            color = ChatColor.RED;
+
+        String message = targetName.equals("Votre")
+                ? ChatColor.GRAY + "Pong ! Votre ping est de " + color + ping + "ms"
+                : ChatColor.GRAY + "Ping de " + ChatColor.AQUA + targetName + ChatColor.GRAY + " : " + color + ping
+                        + "ms";
+
+        sender.sendMessage(message);
     }
 }
