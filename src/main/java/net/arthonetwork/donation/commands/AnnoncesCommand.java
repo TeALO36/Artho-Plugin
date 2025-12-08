@@ -8,18 +8,18 @@ import org.bukkit.command.CommandSender;
 
 import java.util.Arrays;
 
-public class DonCommand implements CommandExecutor {
+public class AnnoncesCommand implements CommandExecutor {
 
     private final ArthoPlugin plugin;
 
-    public DonCommand(ArthoPlugin plugin) {
+    public AnnoncesCommand(ArthoPlugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!sender.isOp() && !sender.hasPermission("arthoplugin.admin")) {
-            sender.sendMessage(ChatColor.RED + "You don't have permission to use this command.");
+            sender.sendMessage(ChatColor.RED + "Vous n'avez pas la permission d'utiliser cette commande.");
             return true;
         }
 
@@ -31,34 +31,39 @@ public class DonCommand implements CommandExecutor {
         String sub = args[0].toLowerCase();
 
         switch (sub) {
-            case "fix":
+            case "fix": // Keep english or rename? Let's use french equivalents or keep them if config
+                        // driven. User said "optimiser toute les commande, qu'elles aient plus de
+                        // sens".
+            case "interval":
+                // Let's support both
                 if (args.length < 2 || !isInteger(args[1])) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /don fix <minutes>");
+                    sender.sendMessage(ChatColor.RED + "Usage: /annonces interval <minutes>");
                     return true;
                 }
                 int fixMinutes = Integer.parseInt(args[1]);
                 if (fixMinutes <= 0) {
-                    sender.sendMessage(ChatColor.RED + "Interval must be positive!");
+                    sender.sendMessage(ChatColor.RED + "L'intervalle doit être positif !");
                     return true;
                 }
                 plugin.setIntervals(fixMinutes * 60, fixMinutes * 60);
-                sender.sendMessage(ChatColor.GREEN + "Broadcast interval set to fixed " + fixMinutes + " minutes.");
+                sender.sendMessage(ChatColor.GREEN + "Intervalle de diffusion fixé à " + fixMinutes + " minutes.");
                 break;
             case "variable":
+            case "range":
                 if (args.length < 2 || !args[1].contains("-")) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /don variable <min>-<max>");
+                    sender.sendMessage(ChatColor.RED + "Usage: /annonces range <min>-<max>");
                     return true;
                 }
                 String[] parts = args[1].split("-");
                 if (parts.length != 2 || !isInteger(parts[0]) || !isInteger(parts[1])) {
-                    sender.sendMessage(ChatColor.RED + "Invalid format! Use: 5-10");
+                    sender.sendMessage(ChatColor.RED + "Format invalide ! Utilisez: 5-10");
                     return true;
                 }
                 int min = Integer.parseInt(parts[0]);
                 int max = Integer.parseInt(parts[1]);
 
                 if (min <= 0 || max <= 0) {
-                    sender.sendMessage(ChatColor.RED + "Intervals must be positive!");
+                    sender.sendMessage(ChatColor.RED + "Les intervalles doivent être positifs !");
                     return true;
                 }
                 if (min > max) {
@@ -67,43 +72,41 @@ public class DonCommand implements CommandExecutor {
                     max = temp;
                 }
                 plugin.setIntervals(min * 60, max * 60);
-                sender.sendMessage(ChatColor.GREEN + "Broadcast interval set to random between " + min + " and " + max
+                sender.sendMessage(ChatColor.GREEN + "Intervalle de diffusion aléatoire entre " + min + " et " + max
                         + " minutes.");
                 break;
+            case "ajouter":
             case "add":
                 if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /don add <message>");
+                    sender.sendMessage(ChatColor.RED + "Usage: /annonces ajouter <message>");
                     return true;
                 }
                 String newMessage = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
                 plugin.addMessage(newMessage);
-                sender.sendMessage(ChatColor.GREEN + "Message added!");
+                sender.sendMessage(ChatColor.GREEN + "Message ajouté !");
                 break;
+            case "lien":
             case "link":
                 if (args.length < 2) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /don link <url>");
+                    sender.sendMessage(ChatColor.RED + "Usage: /annonces lien <url>");
                     return true;
                 }
                 plugin.setDonationLink(args[1]);
-                sender.sendMessage(ChatColor.GREEN + "Donation link updated!");
+                sender.sendMessage(ChatColor.GREEN + "Lien de donation mis à jour !");
                 break;
             case "reset":
                 plugin.resetConfig();
-                sender.sendMessage(ChatColor.GREEN + "Configuration reset to defaults!");
+                sender.sendMessage(ChatColor.GREEN + "Configuration remise à zéro !");
                 break;
             case "reload":
                 plugin.reloadConfig();
                 plugin.loadConfiguration();
-                sender.sendMessage(ChatColor.GREEN + "Artho-Plugin configuration reloaded!");
+                sender.sendMessage(ChatColor.GREEN + "Configuration rechargée !");
                 break;
-            case "enable":
-                plugin.setDonationEnabled(true);
-                sender.sendMessage(ChatColor.GREEN + "Donation broadcasting enabled!");
+            case "config":
+                sender.sendMessage(ChatColor.YELLOW + "Utilisez /annonces interval ou /annonces range.");
                 break;
-            case "disable":
-                plugin.setDonationEnabled(false);
-                sender.sendMessage(ChatColor.RED + "Donation broadcasting disabled!");
-                break;
+            case "aide":
             case "help":
             default:
                 sendHelp(sender);
@@ -123,17 +126,14 @@ public class DonCommand implements CommandExecutor {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.GOLD + "--- Artho-Plugin Help ---");
+        sender.sendMessage(ChatColor.GOLD + "--- Aide Annonces ---");
         sender.sendMessage(
-                ChatColor.YELLOW + "/don fix <minutes> " + ChatColor.WHITE + "- Set fixed broadcast interval.");
+                ChatColor.YELLOW + "/annonces interval <min> " + ChatColor.WHITE + "- Intervalle fixe.");
         sender.sendMessage(
-                ChatColor.YELLOW + "/don variable <min>-<max> " + ChatColor.WHITE + "- Set random interval range.");
-        sender.sendMessage(ChatColor.YELLOW + "/don add <message> " + ChatColor.WHITE + "- Add a donation message.");
-        sender.sendMessage(ChatColor.YELLOW + "/don link <url> " + ChatColor.WHITE + "- Set the donation link.");
-        sender.sendMessage(ChatColor.YELLOW + "/don enable " + ChatColor.WHITE + "- Enable broadcasting.");
-        sender.sendMessage(ChatColor.YELLOW + "/don disable " + ChatColor.WHITE + "- Disable broadcasting.");
-        sender.sendMessage(ChatColor.YELLOW + "/don reset " + ChatColor.WHITE + "- Reset config to defaults.");
-        sender.sendMessage(ChatColor.YELLOW + "/don reload " + ChatColor.WHITE + "- Reload configuration.");
-        sender.sendMessage(ChatColor.YELLOW + "/don help " + ChatColor.WHITE + "- Show this help message.");
+                ChatColor.YELLOW + "/annonces range <min>-<max> " + ChatColor.WHITE + "- Intervalle aléatoire.");
+        sender.sendMessage(ChatColor.YELLOW + "/annonces ajouter <msg> " + ChatColor.WHITE + "- Ajouter un message.");
+        sender.sendMessage(ChatColor.YELLOW + "/annonces lien <url> " + ChatColor.WHITE + "- Changer le lien.");
+        sender.sendMessage(ChatColor.YELLOW + "/annonces reload " + ChatColor.WHITE + "- Recharger config.");
+        sender.sendMessage(ChatColor.YELLOW + "/annonces aire " + ChatColor.WHITE + "- Afficher l'aide.");
     }
 }

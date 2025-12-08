@@ -1,10 +1,10 @@
 package net.arthonetwork.donation;
 
 import net.arthonetwork.donation.commands.AuthCommands;
-import net.arthonetwork.donation.commands.DonCommand;
+import net.arthonetwork.donation.commands.AnnoncesCommand;
 import net.arthonetwork.donation.commands.LagCommand;
 import net.arthonetwork.donation.commands.PingCommand;
-import net.arthonetwork.donation.commands.ServerCommand;
+import net.arthonetwork.donation.commands.SuggestionCommand;
 import net.arthonetwork.donation.listeners.AuthListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
@@ -62,10 +62,10 @@ public class ArthoPlugin extends JavaPlugin {
         }
 
         // Register commands
-        getCommand("don").setExecutor(new DonCommand(this));
+        getCommand("annonces").setExecutor(new AnnoncesCommand(this));
         getCommand("ping").setExecutor(new PingCommand());
         getCommand("lag").setExecutor(new LagCommand());
-        getCommand("server").setExecutor(new ServerCommand(suggestionManager));
+        getCommand("suggestion").setExecutor(new SuggestionCommand(suggestionManager));
 
         net.arthonetwork.donation.commands.ArthoCommand arthoCmd = new net.arthonetwork.donation.commands.ArthoCommand(
                 this);
@@ -80,9 +80,9 @@ public class ArthoPlugin extends JavaPlugin {
 
         // Register TabCompleter
         ArthoTabCompleter tabCompleter = new ArthoTabCompleter();
-        getCommand("don").setTabCompleter(tabCompleter);
+        getCommand("annonces").setTabCompleter(tabCompleter);
         getCommand("lag").setTabCompleter(tabCompleter);
-        getCommand("server").setTabCompleter(tabCompleter);
+        getCommand("suggestion").setTabCompleter(tabCompleter);
         getCommand("auth").setTabCompleter(tabCompleter);
         getCommand("ping").setTabCompleter(tabCompleter);
 
@@ -100,6 +100,9 @@ public class ArthoPlugin extends JavaPlugin {
 
         // Start TabList Update Task (every 1 second = 20 ticks)
         new TabListUpdateTask().runTaskTimer(this, 20L, 20L);
+
+        // Start Tip Broadcast Task (every 5 minutes = 6000 ticks)
+        new net.arthonetwork.donation.tasks.TipBroadcastTask().runTaskTimer(this, 1200L, 6000L);
 
         // Check for updates
         new net.arthonetwork.donation.utils.AutoUpdater(this).checkForUpdates();

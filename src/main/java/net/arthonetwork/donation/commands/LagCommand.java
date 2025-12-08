@@ -15,7 +15,7 @@ public class LagCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /lag <joueur|serveur|help>");
+            checkServerLag(sender);
             return true;
         }
 
@@ -23,7 +23,7 @@ public class LagCommand implements CommandExecutor {
         switch (sub) {
             case "joueur":
                 if (!(sender instanceof Player)) {
-                    sender.sendMessage(ChatColor.RED + "This command can only be used by a player.");
+                    sender.sendMessage(ChatColor.RED + "Cette commande n'est utilisable que par un joueur.");
                     return true;
                 }
                 checkPlayerLag((Player) sender);
@@ -32,12 +32,12 @@ public class LagCommand implements CommandExecutor {
                 checkServerLag(sender);
                 break;
             case "help":
+            case "aide":
                 sendHelp(sender);
                 break;
             default:
-                sender.sendMessage(ChatColor.RED + "Unknown subcommand.");
-                // Redirect to /help as requested
-                Bukkit.dispatchCommand(sender, "help");
+                sender.sendMessage(ChatColor.RED + "Sous-commande inconnue.");
+                sendHelp(sender);
                 break;
         }
         return true;
@@ -49,10 +49,6 @@ public class LagCommand implements CommandExecutor {
         int tileEntityCount = 0;
         int chunkCount = 0;
 
-        // Simple check of loaded chunks around the player
-        // In modern versions, view distance is configurable. We'll scan a fixed radius
-        // or loaded chunks.
-        // Let's scan loaded chunks in the world that are close to the player.
         World world = player.getWorld();
         int viewDist = Bukkit.getViewDistance();
         int pX = player.getLocation().getChunk().getX();
@@ -84,7 +80,6 @@ public class LagCommand implements CommandExecutor {
     private void checkServerLag(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "--- Analyse Lag Serveur ---");
 
-        // Memory
         Runtime runtime = Runtime.getRuntime();
         long maxMemory = runtime.maxMemory() / 1024 / 1024;
         long totalMemory = runtime.totalMemory() / 1024 / 1024;
@@ -94,7 +89,6 @@ public class LagCommand implements CommandExecutor {
         sender.sendMessage(
                 ChatColor.YELLOW + "RAM Utilisée: " + ChatColor.WHITE + usedMemory + "MB / " + maxMemory + "MB");
 
-        // Entities
         int totalEntities = 0;
         int totalChunks = 0;
         for (World world : Bukkit.getWorlds()) {
@@ -113,7 +107,9 @@ public class LagCommand implements CommandExecutor {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.GOLD + "--- Lag Help ---");
+        sender.sendMessage(ChatColor.GOLD + "--- Aide Lag ---");
+        sender.sendMessage(
+                ChatColor.YELLOW + "/lag " + ChatColor.WHITE + "- Stats serveur (défaut).");
         sender.sendMessage(
                 ChatColor.YELLOW + "/lag joueur " + ChatColor.WHITE + "- Analyse les causes de lag autour de vous.");
         sender.sendMessage(

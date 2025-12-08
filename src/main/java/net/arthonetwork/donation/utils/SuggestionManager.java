@@ -96,6 +96,13 @@ public class SuggestionManager {
         return list;
     }
 
+    public String getSuggestionAuthor(String id) {
+        if (suggestionsConfig.contains("suggestions." + id)) {
+            return suggestionsConfig.getString("suggestions." + id + ".author");
+        }
+        return null;
+    }
+
     private void saveSuggestions() {
         try {
             suggestionsConfig.save(suggestionsFile);

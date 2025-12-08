@@ -1,10 +1,8 @@
 package net.arthonetwork.donation.utils;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
-import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import java.util.ArrayList;
@@ -23,38 +21,37 @@ public class ArthoTabCompleter implements TabCompleter {
             return completions;
         String currentArg = args[args.length - 1];
 
-        if (command.getName().equalsIgnoreCase("don")) {
+        String cmdName = command.getName().toLowerCase();
+
+        if (cmdName.equals("annonces") || cmdName.equals("don")) { // Check both just in case
             if (args.length == 1) {
                 if (sender.hasPermission("arthoplugin.admin") || sender.isOp()) {
-                    commands.addAll(Arrays.asList("add", "link", "reset", "reload", "help", "enable", "disable", "fix",
-                            "variable"));
+                    commands.addAll(Arrays.asList("ajouter", "lien", "reset", "reload", "aide", "interval", "range",
+                            "fix", "variable", "add", "link", "help"));
                 } else {
-                    commands.add("help");
+                    commands.add("aide");
                 }
             } else if (args.length == 2) {
-                if (args[0].equalsIgnoreCase("fix")) {
+                if (args[0].equalsIgnoreCase("fix") || args[0].equalsIgnoreCase("interval")) {
                     commands.addAll(Arrays.asList("5", "10", "15", "30", "60"));
-                } else if (args[0].equalsIgnoreCase("variable")) {
+                } else if (args[0].equalsIgnoreCase("variable") || args[0].equalsIgnoreCase("range")) {
                     commands.addAll(Arrays.asList("5-10", "10-20", "15-30"));
                 }
             }
-        } else if (command.getName().equalsIgnoreCase("lag")) {
+        } else if (cmdName.equals("lag")) {
             if (args.length == 1) {
-                commands.addAll(Arrays.asList("joueur", "serveur", "help"));
+                commands.addAll(Arrays.asList("joueur", "serveur", "aide"));
             } else if (args.length == 2 && args[0].equalsIgnoreCase("joueur")) {
                 return null; // Return null to let Bukkit suggest online players
             }
-        } else if (command.getName().equalsIgnoreCase("server")) {
+        } else if (cmdName.equals("suggestion") || cmdName.equals("server")) {
             if (args.length == 1) {
-                commands.addAll(Arrays.asList("add", "list", "help"));
-                if (sender.hasPermission("arthoplugin.admin") || sender.isOp()) {
-                    commands.add("remove");
-                }
+                commands.addAll(Arrays.asList("ajouter", "voir", "aide", "supprimer"));
             }
-        } else if (command.getName().equalsIgnoreCase("auth")) {
+        } else if (cmdName.equals("auth")) {
             if (sender.hasPermission("arthoplugin.admin") || sender.isOp()) {
                 if (args.length == 1) {
-                    commands.addAll(Arrays.asList("unregister", "whitelist", "set", "reset"));
+                    commands.addAll(Arrays.asList("unregister", "whitelist", "set", "reset", "enable", "disable"));
                 } else if (args.length == 2) {
                     if (args[0].equalsIgnoreCase("whitelist")) {
                         commands.addAll(Arrays.asList("add", "remove", "list", "on", "off"));
@@ -70,7 +67,7 @@ public class ArthoTabCompleter implements TabCompleter {
                     }
                 }
             }
-        } else if (command.getName().equalsIgnoreCase("ping")) {
+        } else if (cmdName.equals("ping")) {
             if (args.length == 1) {
                 if (sender.hasPermission("arthoplugin.ping.others") || sender.isOp()) {
                     return null; // Suggest players

@@ -3,35 +3,37 @@ version: ${project.version}
 main: net.arthonetwork.donation.ArthoPlugin
 api-version: 1.13
 commands:
-  don:
-    description: Main command for Artho-Plugin
+  annonces:
+    description: Gérer les annonces et donations
+    aliases: [don]
     permission: arthoplugin.admin
-    usage: /don <add|link|reset|reload|help> [args]
+    usage: /annonces <ajouter|lien|config|reload|aide> [args]
   ping:
-    description: Check your latency
+    description: Voir sa latence
     usage: /ping [joueur]
   lag:
-    description: Check server or player lag sources
-    usage: /lag <joueur|serveur|help>
-  server:
-    description: Suggestion system
-    usage: /server <add|list|remove|help>
+    description: Voir les infos de lag
+    usage: /lag [joueur]
+  suggestion:
+    description: Système de suggestions
+    aliases: [server, idees]
+    usage: /suggestion <ajouter|voir|supprimer>
   register:
-    description: Register an account
+    description: S'inscrire
     usage: /register <password> <confirm>
   login:
-    description: Login to your account
+    description: Se connecter
     usage: /login <password>
   auth:
-    description: Gérer l'authentification (Admin).
+    description: Administration Auth
     usage: /auth <subcommand>
     permission: arthoplugin.admin
   changepassword:
-    description: Changer son mot de passe.
+    description: Changer son mot de passe
     usage: /changepassword <nouveau> <confirmation>
   artho:
-    description: Afficher l'aide globale du plugin.
+    description: Aide globale
     usage: /artho
   arthonetwork:
-    description: Afficher l'aide globale du plugin.
+    description: Aide globale
     usage: /arthonetwork
