@@ -60,8 +60,9 @@ public class ArthoCommand implements CommandExecutor {
         }
 
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");
-        sender.sendMessage(ChatColor.LIGHT_PURPLE + "           Artho-Plugin " + ChatColor.GRAY + "v"
-                + plugin.getDescription().getVersion());
+        sender.sendMessage(ChatColor.LIGHT_PURPLE + "          " + ChatColor.BOLD + "Aide ArthoNetwork"
+                + ChatColor.RESET + ChatColor.GRAY + " (v"
+                + plugin.getDescription().getVersion() + ")");
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");
 
         sender.sendMessage(ChatColor.GOLD + "➤ Annonces / Donations:");
