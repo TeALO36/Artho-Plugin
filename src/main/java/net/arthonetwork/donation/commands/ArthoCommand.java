@@ -16,21 +16,47 @@ public class ArthoCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (args.length > 0 && args[0].equalsIgnoreCase("update")) {
-            if (!sender.hasPermission("arthoplugin.admin")) {
-                sender.sendMessage(ChatColor.RED + "Permission refusée.");
+        if (args.length > 0) {
+            String sub = args[0].toLowerCase();
+
+            if (sub.equals("update")) {
+                if (!sender.hasPermission("arthoplugin.admin")) {
+                    sender.sendMessage(ChatColor.RED + "Permission refusée.");
+                    return true;
+                }
+                if (args.length == 1 || (args.length == 2 && args[1].equalsIgnoreCase("auto"))) {
+                    new net.arthonetwork.donation.utils.AutoUpdater(plugin).downloadLatest(sender);
+                    return true;
+                }
+                if (args.length == 3 && args[1].equalsIgnoreCase("rollback")) {
+                    new net.arthonetwork.donation.utils.AutoUpdater(plugin).downloadVersion(args[2], sender);
+                    return true;
+                }
+                sender.sendMessage(ChatColor.RED + "Usage: /artho update [auto | rollback <version>]");
                 return true;
             }
-            if (args.length == 1 || (args.length == 2 && args[1].equalsIgnoreCase("auto"))) {
-                new net.arthonetwork.donation.utils.AutoUpdater(plugin).downloadLatest(sender);
+
+            if (sub.equals("tips")) {
+                if (!sender.hasPermission("arthoplugin.admin")) {
+                    sender.sendMessage(ChatColor.RED + "Permission refusée.");
+                    return true;
+                }
+                if (args.length < 2) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /artho tips <on|off>");
+                    return true;
+                }
+                String state = args[1].toLowerCase();
+                if (state.equals("on") || state.equals("enable")) {
+                    plugin.setTipsEnabled(true);
+                    sender.sendMessage(ChatColor.GREEN + "Astuces automatiques activées.");
+                } else if (state.equals("off") || state.equals("disable")) {
+                    plugin.setTipsEnabled(false);
+                    sender.sendMessage(ChatColor.RED + "Astuces automatiques désactivées.");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Usage: /artho tips <on|off>");
+                }
                 return true;
             }
-            if (args.length == 3 && args[1].equalsIgnoreCase("rollback")) {
-                new net.arthonetwork.donation.utils.AutoUpdater(plugin).downloadVersion(args[2], sender);
-                return true;
-            }
-            sender.sendMessage(ChatColor.RED + "Usage: /artho update [auto | rollback <version>]");
-            return true;
         }
 
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");
@@ -38,14 +64,13 @@ public class ArthoCommand implements CommandExecutor {
                 + plugin.getDescription().getVersion());
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");
 
-        sender.sendMessage(ChatColor.GOLD + "➤ Donation / Broadcast:");
-        sender.sendMessage(ChatColor.YELLOW + "  /don fix <min> " + ChatColor.WHITE + "- Intervalle fixe.");
+        sender.sendMessage(ChatColor.GOLD + "➤ Annonces / Donations:");
+        sender.sendMessage(ChatColor.YELLOW + "  /annonces interval <min> " + ChatColor.WHITE + "- Intervalle fixe.");
         sender.sendMessage(
-                ChatColor.YELLOW + "  /don variable <min>-<max> " + ChatColor.WHITE + "- Intervalle variable.");
-        sender.sendMessage(ChatColor.YELLOW + "  /don add <msg> " + ChatColor.WHITE + "- Ajouter un message.");
-        sender.sendMessage(ChatColor.YELLOW + "  /don link <url> " + ChatColor.WHITE + "- Changer le lien.");
-        sender.sendMessage(ChatColor.YELLOW + "  /don enable/disable " + ChatColor.WHITE + "- Activer/Désactiver.");
-        sender.sendMessage(ChatColor.YELLOW + "  /don reload " + ChatColor.WHITE + "- Recharger config.");
+                ChatColor.YELLOW + "  /annonces range <min>-<max> " + ChatColor.WHITE + "- Intervalle variable.");
+        sender.sendMessage(ChatColor.YELLOW + "  /annonces ajouter <msg> " + ChatColor.WHITE + "- Ajouter un message.");
+        sender.sendMessage(ChatColor.YELLOW + "  /annonces lien <url> " + ChatColor.WHITE + "- Changer le lien.");
+        sender.sendMessage(ChatColor.YELLOW + "  /annonces reload " + ChatColor.WHITE + "- Recharger config.");
 
         sender.sendMessage(ChatColor.GOLD + "➤ Authentification:");
         sender.sendMessage(ChatColor.YELLOW + "  /register <mdp> <confirm> " + ChatColor.WHITE + "- S'inscrire.");
@@ -61,10 +86,12 @@ public class ArthoCommand implements CommandExecutor {
         }
 
         sender.sendMessage(ChatColor.GOLD + "➤ Suggestions:");
-        sender.sendMessage(ChatColor.YELLOW + "  /server add <idée> " + ChatColor.WHITE + "- Proposer une idée.");
-        sender.sendMessage(ChatColor.YELLOW + "  /server list " + ChatColor.WHITE + "- Voir les idées.");
+        sender.sendMessage(
+                ChatColor.YELLOW + "  /suggestion ajouter <idée> " + ChatColor.WHITE + "- Proposer une idée.");
+        sender.sendMessage(ChatColor.YELLOW + "  /suggestion voir " + ChatColor.WHITE + "- Voir les idées.");
         if (sender.hasPermission("arthoplugin.admin")) {
-            sender.sendMessage(ChatColor.RED + "  /server remove <id> " + ChatColor.WHITE + "- Supprimer une idée.");
+            sender.sendMessage(
+                    ChatColor.RED + "  /suggestion supprimer <id> " + ChatColor.WHITE + "- Supprimer une idée.");
         }
 
         sender.sendMessage(ChatColor.GOLD + "➤ Utilitaires:");
@@ -72,11 +99,10 @@ public class ArthoCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.YELLOW + "  /lag " + ChatColor.WHITE + "- Voir les infos de lag.");
 
         if (sender.hasPermission("arthoplugin.admin")) {
-            sender.sendMessage(ChatColor.GOLD + "➤ Mises à jour:");
+            sender.sendMessage(ChatColor.GOLD + "➤ Administration:");
             sender.sendMessage(
                     ChatColor.RED + "  /artho update [auto] " + ChatColor.WHITE + "- Forcer la mise à jour.");
-            sender.sendMessage(ChatColor.RED + "  /artho update rollback <version> " + ChatColor.WHITE
-                    + "- Revenir à une version.");
+            sender.sendMessage(ChatColor.RED + "  /artho tips <on|off> " + ChatColor.WHITE + "- Activer astuces.");
         }
 
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");

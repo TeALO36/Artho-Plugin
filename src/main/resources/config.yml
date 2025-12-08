@@ -2,6 +2,9 @@
 interval-min: 300
 interval-max: 600
 
+# Enable/Disable auto-tips in chat
+tips-enabled: true
+
 # The donation link
 donation-link: "https://buy.stripe.com/14k8Al4ki5tl8HmfZb"
 

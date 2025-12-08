@@ -4,7 +4,7 @@
 
   <groupId>net.arthonetwork</groupId>
   <artifactId>donation-plugin</artifactId>
-  <version>0.10.13</version>
+  <version>0.10.14</version>
   <packaging>jar</packaging>
 
   <name>Artho-Plugin</name>

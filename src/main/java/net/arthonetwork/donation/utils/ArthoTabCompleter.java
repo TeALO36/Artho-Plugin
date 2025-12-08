@@ -23,7 +23,7 @@ public class ArthoTabCompleter implements TabCompleter {
 
         String cmdName = command.getName().toLowerCase();
 
-        if (cmdName.equals("annonces") || cmdName.equals("don")) { // Check both just in case
+        if (cmdName.equals("annonces") || cmdName.equals("don")) {
             if (args.length == 1) {
                 if (sender.hasPermission("arthoplugin.admin") || sender.isOp()) {
                     commands.addAll(Arrays.asList("ajouter", "lien", "reset", "reload", "aide", "interval", "range",
@@ -42,7 +42,7 @@ public class ArthoTabCompleter implements TabCompleter {
             if (args.length == 1) {
                 commands.addAll(Arrays.asList("joueur", "serveur", "aide"));
             } else if (args.length == 2 && args[0].equalsIgnoreCase("joueur")) {
-                return null; // Return null to let Bukkit suggest online players
+                return null;
             }
         } else if (cmdName.equals("suggestion") || cmdName.equals("server")) {
             if (args.length == 1) {
@@ -58,19 +58,32 @@ public class ArthoTabCompleter implements TabCompleter {
                     } else if (args[0].equalsIgnoreCase("set")) {
                         commands.addAll(Arrays.asList("max-attempts", "timeout"));
                     } else if (args[0].equalsIgnoreCase("unregister") || args[0].equalsIgnoreCase("reset")) {
-                        return null; // Suggest players
+                        return null;
                     }
                 } else if (args.length == 3) {
                     if (args[0].equalsIgnoreCase("whitelist")
                             && (args[1].equalsIgnoreCase("add") || args[1].equalsIgnoreCase("remove"))) {
-                        return null; // Suggest players
+                        return null;
                     }
                 }
             }
         } else if (cmdName.equals("ping")) {
             if (args.length == 1) {
                 if (sender.hasPermission("arthoplugin.ping.others") || sender.isOp()) {
-                    return null; // Suggest players
+                    return null;
+                }
+            }
+        } else if (cmdName.equals("artho") || cmdName.equals("arthonetwork")) {
+            if (sender.hasPermission("arthoplugin.admin")) {
+                if (args.length == 1) {
+                    commands.addAll(Arrays.asList("update", "tips"));
+                } else if (args.length == 2) {
+                    if (args[0].equalsIgnoreCase("update")) {
+                        commands.add("auto");
+                        commands.add("rollback");
+                    } else if (args[0].equalsIgnoreCase("tips")) {
+                        commands.addAll(Arrays.asList("on", "off"));
+                    }
                 }
             }
         }

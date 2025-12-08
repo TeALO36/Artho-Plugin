@@ -39,7 +39,9 @@ public class ArthoPlugin extends JavaPlugin {
     private AuthManager authManager;
     private OpCheckTask opCheckTask;
     private boolean donationEnabled;
+    private boolean tipsEnabled;
     private ConsoleFilter consoleFilter;
+    private BukkitRunnable tipsTask;
 
     @Override
     public void onEnable() {
@@ -85,6 +87,7 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("suggestion").setTabCompleter(tabCompleter);
         getCommand("auth").setTabCompleter(tabCompleter);
         getCommand("ping").setTabCompleter(tabCompleter);
+        getCommand("artho").setTabCompleter(tabCompleter);
 
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
@@ -101,8 +104,8 @@ public class ArthoPlugin extends JavaPlugin {
         // Start TabList Update Task (every 1 second = 20 ticks)
         new TabListUpdateTask().runTaskTimer(this, 20L, 20L);
 
-        // Start Tip Broadcast Task (every 5 minutes = 6000 ticks)
-        new net.arthonetwork.donation.tasks.TipBroadcastTask().runTaskTimer(this, 1200L, 6000L);
+        // Start Tip Broadcast Task
+        startTipsTask();
 
         // Check for updates
         new net.arthonetwork.donation.utils.AutoUpdater(this).checkForUpdates();
@@ -117,6 +120,9 @@ public class ArthoPlugin extends JavaPlugin {
         }
         if (opCheckTask != null && !opCheckTask.isCancelled()) {
             opCheckTask.cancel();
+        }
+        if (tipsTask != null && !tipsTask.isCancelled()) {
+            tipsTask.cancel();
         }
 
         // Unregister Console Filter
@@ -152,6 +158,7 @@ public class ArthoPlugin extends JavaPlugin {
         }
 
         donationEnabled = config.getBoolean("donation-enabled", true);
+        tipsEnabled = config.getBoolean("tips-enabled", true);
     }
 
     // Alias for loadConfig to match DonCommand usage
@@ -241,5 +248,23 @@ public class ArthoPlugin extends JavaPlugin {
 
     public SuggestionManager getSuggestionManager() {
         return suggestionManager;
+    }
+
+    private void startTipsTask() {
+        if (tipsTask != null && !tipsTask.isCancelled()) {
+            tipsTask.cancel();
+        }
+
+        if (tipsEnabled) {
+            tipsTask = new net.arthonetwork.donation.tasks.TipBroadcastTask();
+            tipsTask.runTaskTimer(this, 1200L, 6000L); // 5 minutes
+        }
+    }
+
+    public void setTipsEnabled(boolean enabled) {
+        this.tipsEnabled = enabled;
+        getConfig().set("tips-enabled", enabled);
+        saveConfig();
+        startTipsTask();
     }
 }
