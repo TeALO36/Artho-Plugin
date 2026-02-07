@@ -8,6 +8,7 @@ import net.arthonetwork.donation.commands.PingCommand;
 import net.arthonetwork.donation.commands.SuggestionCommand;
 import net.arthonetwork.donation.commands.TpaCommand;
 import net.arthonetwork.donation.listeners.AuthListener;
+import net.arthonetwork.donation.listeners.DeathListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
 import net.arthonetwork.donation.listeners.TeleportListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
@@ -115,6 +116,7 @@ public class ArthoPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new AuthListener(this, authManager), this);
         getServer().getPluginManager().registerEvents(new TeleportListener(teleportManager), this);
+        getServer().getPluginManager().registerEvents(new DeathListener(), this);
 
         // Start tasks
         startBroadcasting();
