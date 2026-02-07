@@ -152,4 +152,15 @@ public class AuthListener implements Listener {
             event.setCancelled(true);
         }
     }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onDamage(org.bukkit.event.entity.EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player) {
+            Player player = (Player) event.getEntity();
+            if (!authManager.isLoggedIn(player.getUniqueId())
+                    || authManager.isForceChange(player.getUniqueId())) {
+                event.setCancelled(true);
+            }
+        }
+    }
 }
