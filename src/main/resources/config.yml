@@ -17,6 +17,9 @@ messages:
   - "&c[ArthoNetwork] &4Un petit geste pour le serveur ? &c$link"
   - "&9[ArthoNetwork] &3Participez à l'aventure en nous soutenant : &b$link"
   - "&5[ArthoNetwork] &dMerci de votre fidélité ! &5Dons : &d$link"
+  - "&eASTUCE &7» &fUtilisez &e/sethome <nom> &fpour sauvegarder un endroit !"
+  - "&eASTUCE &7» &fTapez &e/homes &fpour voir vos points de téléportation."
+  - "&eASTUCE &7» &fBesoin de rejoindre un ami ? Faites &e/tpa <joueur> &f!"
 
 # Auto-Update Configuration
 update:
