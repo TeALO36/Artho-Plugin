@@ -2,17 +2,22 @@ package net.arthonetwork.donation;
 
 import net.arthonetwork.donation.commands.AuthCommands;
 import net.arthonetwork.donation.commands.AnnoncesCommand;
+import net.arthonetwork.donation.commands.HomeCommand;
 import net.arthonetwork.donation.commands.LagCommand;
 import net.arthonetwork.donation.commands.PingCommand;
 import net.arthonetwork.donation.commands.SuggestionCommand;
+import net.arthonetwork.donation.commands.TpaCommand;
 import net.arthonetwork.donation.listeners.AuthListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
+import net.arthonetwork.donation.listeners.TeleportListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
 import net.arthonetwork.donation.tasks.AuthReminderTask;
 import net.arthonetwork.donation.tasks.TabListUpdateTask;
 import net.arthonetwork.donation.utils.ArthoTabCompleter;
 import net.arthonetwork.donation.utils.AuthManager;
+import net.arthonetwork.donation.utils.HomeManager;
 import net.arthonetwork.donation.utils.SuggestionManager;
+import net.arthonetwork.donation.utils.TeleportManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -37,6 +42,8 @@ public class ArthoPlugin extends JavaPlugin {
     private BukkitRunnable task;
     private SuggestionManager suggestionManager;
     private AuthManager authManager;
+    private TeleportManager teleportManager;
+    private HomeManager homeManager;
     private OpCheckTask opCheckTask;
     private boolean donationEnabled;
     private boolean tipsEnabled;
@@ -50,6 +57,8 @@ public class ArthoPlugin extends JavaPlugin {
 
         suggestionManager = new SuggestionManager(this);
         authManager = new AuthManager(this);
+        teleportManager = new TeleportManager(this);
+        homeManager = new HomeManager(this, teleportManager);
 
         // Register Console Filter
         consoleFilter = new ConsoleFilter();
@@ -80,6 +89,19 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("auth").setExecutor(authCmd);
         getCommand("changepassword").setExecutor(authCmd);
 
+        // Teleportation commands
+        TpaCommand tpaCmd = new TpaCommand(teleportManager);
+        getCommand("tpa").setExecutor(tpaCmd);
+        getCommand("tpaccept").setExecutor(tpaCmd);
+        getCommand("tpdeny").setExecutor(tpaCmd);
+        getCommand("tpcancel").setExecutor(tpaCmd);
+
+        HomeCommand homeCmd = new HomeCommand(homeManager);
+        getCommand("sethome").setExecutor(homeCmd);
+        getCommand("home").setExecutor(homeCmd);
+        getCommand("delhome").setExecutor(homeCmd);
+        getCommand("homes").setExecutor(homeCmd);
+
         // Register TabCompleter
         ArthoTabCompleter tabCompleter = new ArthoTabCompleter();
         getCommand("annonces").setTabCompleter(tabCompleter);
@@ -92,6 +114,7 @@ public class ArthoPlugin extends JavaPlugin {
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new AuthListener(this, authManager), this);
+        getServer().getPluginManager().registerEvents(new TeleportListener(teleportManager), this);
 
         // Start tasks
         startBroadcasting();

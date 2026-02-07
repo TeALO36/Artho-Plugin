@@ -37,3 +37,33 @@ commands:
   arthonetwork:
     description: Aide globale
     usage: /arthonetwork
+  # ==================== TELEPORTATION ====================
+  tpa:
+    description: Demander une téléportation
+    usage: /tpa <joueur>
+  tpaccept:
+    description: Accepter une demande de TP
+    aliases: [tpyes]
+    usage: /tpaccept [joueur]
+  tpdeny:
+    description: Refuser une demande de TP
+    aliases: [tpno]
+    usage: /tpdeny [joueur]
+  tpcancel:
+    description: Annuler sa demande de TP
+    usage: /tpcancel
+  sethome:
+    description: Créer un point de spawn
+    usage: /sethome [nom]
+  home:
+    description: Aller à un home
+    usage: /home [nom]
+  delhome:
+    description: Supprimer un home
+    aliases: [removehome]
+    usage: /delhome <nom>
+  homes:
+    description: Liste des homes
+    aliases: [listhomes]
+    usage: /homes
+

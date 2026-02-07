@@ -50,3 +50,43 @@ auth:
     admin-reset-success: "&aMot de passe réinitialisé pour $player. Cliquez pour copier : "
     admin-reset-hover: "&eCliquez pour copier le mot de passe"
     password-copied: "&aMot de passe copié !"
+
+# ==================== TELEPORTATION ====================
+teleport:
+  # Délai avant téléportation (secondes)
+  warmup: 5
+  
+  # Cooldowns (secondes)
+  cooldowns:
+    tpa: 30
+    home: 15
+  
+  # Nombre maximum de homes par joueur
+  max-homes: 3
+  
+  # Durée d'expiration des demandes TPA (secondes)
+  tpa-expire: 60
+  
+  # Messages
+  messages:
+    warmup-title: "&e⏳ Téléportation..."
+    warmup-subtitle: "&7Restez immobile"
+    warmup-actionbar: "&e⏳ TP dans &f%time% &esec..."
+    cancelled-moved: "&c✘ Téléportation annulée - Vous avez bougé !"
+    cancelled-damage: "&c✘ Téléportation annulée - Vous avez pris des dégâts !"
+    success: "&a✔ Téléportation réussie !"
+    cooldown: "&c⏱ Attendez encore &f%time% &csec."
+    # TPA
+    tpa-sent: "&a➤ Demande envoyée à &f%player%"
+    tpa-received: "&a%player% &7veut se téléporter à vous !"
+    tpa-accepted: "&a✔ Demande acceptée !"
+    tpa-denied: "&c✘ Demande refusée."
+    tpa-expired: "&7La demande a expiré."
+    tpa-no-request: "&cAucune demande en attente."
+    # Home
+    home-set: "&a✔ Home &f%name% &acréé !"
+    home-deleted: "&c✘ Home &f%name% &csupprimé."
+    home-not-found: "&cHome &f%name% &cintrouvable."
+    home-list-header: "&d&l⚡ Vos Homes:"
+    home-max-reached: "&cVous avez atteint la limite de &f%max% &chomes !"
+
