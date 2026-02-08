@@ -48,8 +48,7 @@ public class TeleportManager {
 
         // Check if already has pending request
         if (tpaRequests.containsValue(requester.getUniqueId())) {
-            requester.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
-                    "&cVous avez déjà une demande en attente. Utilisez /tpcancel pour l'annuler."));
+            requester.sendMessage(getMessage("tpa-already-pending"));
             return;
         }
 
@@ -73,10 +72,11 @@ public class TeleportManager {
                     tpaRequests.remove(target.getUniqueId());
                     tpaRequestTimes.remove(target.getUniqueId());
                     if (requester.isOnline()) {
-                        requester.sendMessage(getMessage("tpa-expired"));
+                        requester
+                                .sendMessage(getMessage("tpa-expired-requester").replace("%player%", target.getName()));
                     }
                     if (target.isOnline()) {
-                        target.sendMessage(getMessage("tpa-expired"));
+                        target.sendMessage(getMessage("tpa-expired-target").replace("%player%", requester.getName()));
                     }
                 }
             }
@@ -136,8 +136,8 @@ public class TeleportManager {
         tpaRequests.remove(target.getUniqueId());
         tpaRequestTimes.remove(target.getUniqueId());
 
-        target.sendMessage(getMessage("tpa-accepted"));
-        requester.sendMessage(getMessage("tpa-accepted"));
+        target.sendMessage(getMessage("tpa-accepted-target").replace("%player%", requester.getName()));
+        requester.sendMessage(getMessage("tpa-accepted-requester").replace("%player%", target.getName()));
 
         // Start teleport with warmup
         startTeleport(requester, target.getLocation(), "tpa");
@@ -155,9 +155,10 @@ public class TeleportManager {
         tpaRequests.remove(target.getUniqueId());
         tpaRequestTimes.remove(target.getUniqueId());
 
-        target.sendMessage(getMessage("tpa-denied"));
+        target.sendMessage(getMessage("tpa-denied-target").replace("%player%",
+                requesterName != null ? requesterName : "un joueur"));
         if (requester != null && requester.isOnline()) {
-            requester.sendMessage(getMessage("tpa-denied"));
+            requester.sendMessage(getMessage("tpa-denied-requester").replace("%player%", target.getName()));
         }
     }
 
@@ -177,8 +178,7 @@ public class TeleportManager {
 
         tpaRequests.remove(targetId);
         tpaRequestTimes.remove(targetId);
-        requester.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
-                "&7Demande annulée."));
+        requester.sendMessage(getMessage("tpa-cancelled"));
     }
 
     // ==================== TELEPORT WITH WARMUP ====================

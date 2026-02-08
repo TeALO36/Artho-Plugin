@@ -103,8 +103,7 @@ public class HomeManager {
 
         // Check if already teleporting
         if (teleportManager.hasPendingTeleport(player)) {
-            player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
-                    "&cVous avez déjà une téléportation en cours !"));
+            player.sendMessage(getMessage("teleport-in-progress"));
             return false;
         }
 
@@ -149,8 +148,7 @@ public class HomeManager {
         Set<String> homes = getHomeNames(player);
 
         if (homes.isEmpty()) {
-            player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
-                    "&7Vous n'avez aucun home. Utilisez &e/sethome <nom> &7pour en créer un."));
+            player.sendMessage(getMessage("home-no-homes"));
             return;
         }
 
@@ -183,8 +181,9 @@ public class HomeManager {
 
         int maxHomes = plugin.getConfig().getInt("teleport.max-homes", 3);
         player.sendMessage("");
-        player.sendMessage(org.bukkit.ChatColor.translateAlternateColorCodes('&',
-                "&7Homes utilisés: &f" + homes.size() + "/" + maxHomes));
+        player.sendMessage(getMessage("home-count")
+                .replace("%count%", String.valueOf(homes.size()))
+                .replace("%max%", String.valueOf(maxHomes)));
     }
 
     // ==================== UTILITIES ====================
