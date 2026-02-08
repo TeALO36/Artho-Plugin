@@ -29,10 +29,14 @@ public class AutoUpdater {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 String latestTag = fetchLatestTag();
-                if (latestTag == null)
+                if (latestTag == null) {
+                    plugin.getLogger().warning("Impossible de récupérer le tag latest depuis GitHub.");
                     return;
+                }
 
                 String latestVersion = latestTag.replace("v", "");
+                plugin.getLogger()
+                        .info("[AutoUpdate] Version actuelle: " + currentVersion + " | Dernière: " + latestVersion);
 
                 if (isNewer(latestVersion, currentVersion)) {
                     plugin.getLogger().info("Une nouvelle version est disponible : " + latestTag);
@@ -43,7 +47,7 @@ public class AutoUpdater {
                                 .info("Téléchargez-la ici : https://github.com/" + repo + "/releases/tag/" + latestTag);
                     }
                 } else {
-                    plugin.getLogger().info("Le plugin est à jour.");
+                    plugin.getLogger().info("Le plugin est à jour (" + currentVersion + ").");
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning("Impossible de vérifier les mises à jour : " + e.getMessage());
@@ -100,7 +104,9 @@ public class AutoUpdater {
                         downloadUpdate(latestTag, sender);
                     } else {
                         if (sender != null) {
-                            sender.sendMessage(ChatColor.GREEN + "Le plugin est déjà à jour (" + currentVersion + ").");
+                            sender.sendMessage(ChatColor.GREEN + "Le plugin est déjà à jour.");
+                            sender.sendMessage(ChatColor.GRAY + "Version actuelle: " + currentVersion + " | GitHub: "
+                                    + latestVersion);
                         }
                     }
                 } else {
