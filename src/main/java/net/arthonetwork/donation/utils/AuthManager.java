@@ -95,12 +95,20 @@ public class AuthManager {
     }
 
     private void saveUserdata() {
-        try {
-            userdataConfig.save(userdataFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save userdata.yml!");
-            e.printStackTrace();
+        // Async save to prevent lag
+        final org.bukkit.configuration.file.YamlConfiguration configCopy = YamlConfiguration
+                .loadConfiguration(userdataFile);
+        for (String key : userdataConfig.getKeys(true)) {
+            configCopy.set(key, userdataConfig.get(key));
         }
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                configCopy.save(userdataFile);
+            } catch (IOException e) {
+                plugin.getLogger().severe("Could not save userdata.yml!");
+                e.printStackTrace();
+            }
+        });
     }
 
     public boolean isIpBlocked(String ip) {

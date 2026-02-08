@@ -42,11 +42,19 @@ public class HomeManager {
     }
 
     private void saveHomesFile() {
-        try {
-            homesConfig.save(homesFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Impossible de sauvegarder homes.yml: " + e.getMessage());
+        // Async save to prevent lag
+        final org.bukkit.configuration.file.YamlConfiguration configCopy = YamlConfiguration
+                .loadConfiguration(homesFile);
+        for (String key : homesConfig.getKeys(true)) {
+            configCopy.set(key, homesConfig.get(key));
         }
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                configCopy.save(homesFile);
+            } catch (IOException e) {
+                plugin.getLogger().severe("Impossible de sauvegarder homes.yml: " + e.getMessage());
+            }
+        });
     }
 
     // ==================== HOME MANAGEMENT ====================
@@ -74,6 +82,7 @@ public class HomeManager {
         saveHomesFile();
 
         player.sendMessage(getMessage("home-set").replace("%name%", name));
+        sendHomeCount(player);
         return true;
     }
 
@@ -90,6 +99,7 @@ public class HomeManager {
         saveHomesFile();
 
         player.sendMessage(getMessage("home-deleted").replace("%name%", name));
+        sendHomeCount(player);
         return true;
     }
 
@@ -187,6 +197,14 @@ public class HomeManager {
     }
 
     // ==================== UTILITIES ====================
+
+    private void sendHomeCount(Player player) {
+        Set<String> homes = getHomeNames(player);
+        int maxHomes = plugin.getConfig().getInt("teleport.max-homes", 3);
+        player.sendMessage(getMessage("home-count")
+                .replace("%count%", String.valueOf(homes.size()))
+                .replace("%max%", String.valueOf(maxHomes)));
+    }
 
     private String getMessage(String key) {
         String msg = plugin.getConfig().getString("teleport.messages." + key, "&cMessage manquant: " + key);

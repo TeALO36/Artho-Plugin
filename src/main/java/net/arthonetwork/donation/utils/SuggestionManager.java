@@ -104,21 +104,32 @@ public class SuggestionManager {
     }
 
     private void saveSuggestions() {
-        try {
-            suggestionsConfig.save(suggestionsFile);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save suggestions.yml!");
-            e.printStackTrace();
+        // Async save to prevent lag
+        final org.bukkit.configuration.file.YamlConfiguration configCopy = YamlConfiguration
+                .loadConfiguration(suggestionsFile);
+        for (String key : suggestionsConfig.getKeys(true)) {
+            configCopy.set(key, suggestionsConfig.get(key));
         }
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                configCopy.save(suggestionsFile);
+            } catch (IOException e) {
+                plugin.getLogger().severe("Could not save suggestions.yml!");
+                e.printStackTrace();
+            }
+        });
     }
 
     private void logHistory(String line) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(historyFile, true))) {
-            writer.write(line);
-            writer.newLine();
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not write to suggestions_history.txt!");
-            e.printStackTrace();
-        }
+        // Async write to prevent lag
+        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(historyFile, true))) {
+                writer.write(line);
+                writer.newLine();
+            } catch (IOException e) {
+                plugin.getLogger().severe("Could not write to suggestions_history.txt!");
+                e.printStackTrace();
+            }
+        });
     }
 }
