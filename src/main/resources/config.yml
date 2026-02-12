@@ -103,3 +103,24 @@ teleport:
     tpa-already-pending: "&cVous avez déjà une demande en attente. Utilisez &e/tpcancel &cpour l'annuler."
     teleport-in-progress: "&cVous avez déjà une téléportation en cours !"
 
+
+# ==================== ANTI-CHEAT ====================
+anticheat:
+  antixray:
+    enabled: false
+    ignore-ops: true
+    # Maximum Y level to track mining (usually sea level is 63)
+    max-y: 64
+    # Time window to analyze mining patterns (minutes)
+    window-minutes: 10
+    
+    thresholds:
+      # Max diamonds/emeralds/debris allowed in window before alert
+      diamonds: 12
+      # Min stone mined to trigger ratio check
+      min-stone: 20
+      # Max ratio of ores/stone (0.4 = 40% ores)
+      max-ore-ratio: 0.4
+      
+    messages:
+      prefix: "&c&l⚠ AntiXray &8»"

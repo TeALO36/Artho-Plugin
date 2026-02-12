@@ -57,6 +57,36 @@ public class ArthoCommand implements CommandExecutor {
                 }
                 return true;
             }
+
+            if (sub.equals("antixray")) {
+                if (!sender.hasPermission("arthoplugin.admin")) {
+                    sender.sendMessage(ChatColor.RED + "Permission refusée.");
+                    return true;
+                }
+                net.arthonetwork.donation.listeners.AntiXrayListener listener = plugin.getAntiXrayListener();
+
+                if (args.length < 2) {
+                    sender.sendMessage(ChatColor.GOLD + "AntiXray Status: "
+                            + (listener.isEnabled() ? ChatColor.GREEN + "ON" : ChatColor.RED + "OFF"));
+                    sender.sendMessage(ChatColor.YELLOW + "Usage: /artho antixray <on|off|status>");
+                    return true;
+                }
+
+                String state = args[1].toLowerCase();
+                if (state.equals("on") || state.equals("enable")) {
+                    listener.setEnabled(true);
+                    sender.sendMessage(ChatColor.GREEN + "AntiXray activé.");
+                } else if (state.equals("off") || state.equals("disable")) {
+                    listener.setEnabled(false);
+                    sender.sendMessage(ChatColor.RED + "AntiXray désactivé.");
+                } else if (state.equals("status")) {
+                    sender.sendMessage(ChatColor.GOLD + "AntiXray Status: "
+                            + (listener.isEnabled() ? ChatColor.GREEN + "ON" : ChatColor.RED + "OFF"));
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Usage: /artho antixray <on|off|status>");
+                }
+                return true;
+            }
         }
 
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");
@@ -104,6 +134,8 @@ public class ArthoCommand implements CommandExecutor {
             sender.sendMessage(
                     ChatColor.RED + "  /artho update [auto] " + ChatColor.WHITE + "- Forcer la mise à jour.");
             sender.sendMessage(ChatColor.RED + "  /artho tips <on|off> " + ChatColor.WHITE + "- Activer astuces.");
+            sender.sendMessage(
+                    ChatColor.RED + "  /artho antixray <on|off> " + ChatColor.WHITE + "- Gérer l'Anti-Xray.");
         }
 
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");

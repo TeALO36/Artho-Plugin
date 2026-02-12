@@ -11,6 +11,7 @@ import net.arthonetwork.donation.listeners.AuthListener;
 import net.arthonetwork.donation.listeners.DeathListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
 import net.arthonetwork.donation.listeners.TeleportListener;
+import net.arthonetwork.donation.listeners.AntiXrayListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
 import net.arthonetwork.donation.tasks.AuthReminderTask;
 import net.arthonetwork.donation.tasks.TabListUpdateTask;
@@ -47,6 +48,7 @@ public class ArthoPlugin extends JavaPlugin {
     private AuthManager authManager;
     private TeleportManager teleportManager;
     private HomeManager homeManager;
+    private AntiXrayListener antiXrayListener;
     private OpCheckTask opCheckTask;
     private boolean donationEnabled;
     private boolean tipsEnabled;
@@ -63,6 +65,7 @@ public class ArthoPlugin extends JavaPlugin {
         authManager = new AuthManager(this);
         teleportManager = new TeleportManager(this);
         homeManager = new HomeManager(this, teleportManager);
+        antiXrayListener = new AntiXrayListener(this);
 
         // Register Console Filter
         consoleFilter = new ConsoleFilter();
@@ -119,6 +122,7 @@ public class ArthoPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new AuthListener(this, authManager), this);
         getServer().getPluginManager().registerEvents(new TeleportListener(teleportManager), this);
+        getServer().getPluginManager().registerEvents(antiXrayListener, this);
         getServer().getPluginManager().registerEvents(new DeathListener(), this);
 
         // Start tasks
@@ -285,6 +289,10 @@ public class ArthoPlugin extends JavaPlugin {
         getConfig().set("interval-max", max);
         saveConfig();
         startBroadcasting(); // Restart with new intervals
+    }
+
+    public AntiXrayListener getAntiXrayListener() {
+        return antiXrayListener;
     }
 
     public void resetConfig() {
