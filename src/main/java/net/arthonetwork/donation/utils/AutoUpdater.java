@@ -59,9 +59,11 @@ public class AutoUpdater {
         try {
             URL url = new URL("https://github.com/" + repo + "/releases/latest");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setInstanceFollowRedirects(false); // Don't follow, just get the Location header
+            connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
+            connection.setConnectTimeout(10000);
+            connection.setReadTimeout(10000);
 
             int responseCode = connection.getResponseCode();
             if (responseCode == 302 || responseCode == 301) {
@@ -128,14 +130,10 @@ public class AutoUpdater {
 
     private void downloadUpdate(String tagName, org.bukkit.command.CommandSender sender) {
         try {
-            // Construct URL manually:
-            // https://github.com/TeALO36/Artho-Plugin/releases/download/v0.10.2/Artho-Plugin.jar
-            // Note: This assumes the jar name is always Artho-Plugin.jar. If it changes,
-            // this breaks.
             String downloadUrl = "https://github.com/" + repo + "/releases/download/" + tagName + "/Artho-Plugin.jar";
-            String fileName = "Artho-Plugin.jar"; // Or "Artho-Plugin-" + tagName + ".jar" if you prefer versioned names
+            String fileName = "Artho-Plugin.jar";
 
-            File updateFolder = new File(plugin.getDataFolder().getParentFile(), "update"); // plugins/update/
+            File updateFolder = new File(plugin.getDataFolder().getParentFile(), "update");
             if (!updateFolder.exists()) {
                 updateFolder.mkdirs();
             }
@@ -145,20 +143,65 @@ public class AutoUpdater {
             if (sender != null)
                 sender.sendMessage(ChatColor.YELLOW + "Téléchargement de " + tagName + "...");
             plugin.getLogger().info("Téléchargement de la mise à jour (" + tagName + ")...");
+            plugin.getLogger().info("[AutoUpdate] URL: " + downloadUrl);
 
-            URL url = new URL(downloadUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
-            // Follow redirects for the download itself (GitHub releases redirect to
-            // AWS/objects)
-            connection.setInstanceFollowRedirects(true);
+            // Follow redirects manually (Java HttpURLConnection doesn't follow cross-host
+            // redirects)
+            HttpURLConnection connection = null;
+            String currentUrl = downloadUrl;
+            int maxRedirects = 5;
+
+            for (int i = 0; i < maxRedirects; i++) {
+                URL url = new URL(currentUrl);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("User-Agent", "Artho-Plugin-Updater");
+                connection.setInstanceFollowRedirects(false);
+                connection.setConnectTimeout(15000);
+                connection.setReadTimeout(30000);
+
+                int responseCode = connection.getResponseCode();
+                plugin.getLogger().info("[AutoUpdate] " + currentUrl + " -> HTTP " + responseCode);
+
+                if (responseCode == 301 || responseCode == 302 || responseCode == 307 || responseCode == 308) {
+                    String location = connection.getHeaderField("Location");
+                    if (location == null) {
+                        throw new Exception("Redirect sans header Location (HTTP " + responseCode + ")");
+                    }
+                    currentUrl = location;
+                    connection.disconnect();
+                    continue;
+                }
+
+                if (responseCode == 200) {
+                    break;
+                }
+
+                throw new Exception("HTTP " + responseCode + " pour " + currentUrl);
+            }
+
+            if (connection == null || connection.getResponseCode() != 200) {
+                throw new Exception("Impossible de télécharger après " + maxRedirects + " redirections");
+            }
+
+            long totalSize = connection.getContentLengthLong();
+            plugin.getLogger().info(
+                    "[AutoUpdate] Taille du fichier: " + (totalSize > 0 ? (totalSize / 1024) + " KB" : "inconnue"));
 
             try (BufferedInputStream in = new BufferedInputStream(connection.getInputStream());
                     FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
-                byte dataBuffer[] = new byte[1024];
+                byte[] dataBuffer = new byte[4096];
                 int bytesRead;
-                while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+                long totalDownloaded = 0;
+                while ((bytesRead = in.read(dataBuffer, 0, dataBuffer.length)) != -1) {
                     fileOutputStream.write(dataBuffer, 0, bytesRead);
+                    totalDownloaded += bytesRead;
+                }
+                plugin.getLogger().info("[AutoUpdate] Téléchargé: " + (totalDownloaded / 1024) + " KB");
+
+                if (totalDownloaded < 1000) {
+                    outputFile.delete();
+                    throw new Exception(
+                            "Fichier téléchargé trop petit (" + totalDownloaded + " bytes) - probablement une erreur");
                 }
             }
 
@@ -172,9 +215,9 @@ public class AutoUpdater {
         } catch (Exception e) {
             String error = "Échec du téléchargement (" + tagName + ") : " + e.getMessage();
             plugin.getLogger().warning(error);
+            e.printStackTrace();
             if (sender != null)
                 sender.sendMessage(ChatColor.RED + error);
-            // e.printStackTrace(); // Optional: keep logs clean
         }
     }
 }
