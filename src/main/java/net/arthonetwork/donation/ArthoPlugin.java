@@ -179,25 +179,35 @@ public class ArthoPlugin extends JavaPlugin {
      * updates.
      */
     private void migrateConfig() {
-        try (InputStream defaultStream = getResource("config.yml")) {
-            if (defaultStream == null)
-                return;
-            FileConfiguration defaultConfig = org.bukkit.configuration.file.YamlConfiguration
-                    .loadConfiguration(new InputStreamReader(defaultStream));
-            FileConfiguration currentConfig = getConfig();
-            boolean changed = false;
-            for (String key : defaultConfig.getKeys(true)) {
-                if (!currentConfig.contains(key)) {
-                    currentConfig.set(key, defaultConfig.get(key));
-                    changed = true;
-                }
-            }
-            if (changed) {
+        try {
+            // 1. Manually load default config with UTF-8
+            InputStream defaultStream = getResource("config.yml");
+            if (defaultStream != null) {
+                FileConfiguration defaultConfig = org.bukkit.configuration.file.YamlConfiguration
+                        .loadConfiguration(
+                                new InputStreamReader(defaultStream, java.nio.charset.StandardCharsets.UTF_8));
+
+                // 2. Set as defaults for the current config
+                getConfig().setDefaults(defaultConfig);
+
+                // 3. Copy defaults to config (only if missing)
+                getConfig().options().copyDefaults(true);
+
+                // 4. Save to disk
                 saveConfig();
-                getLogger().info("Config mise à jour avec les nouvelles clés par défaut.");
+
+                getLogger().info("[Config] Defaults loaded and saved.");
+
+                // 5. Verify a critical key
+                if (getConfig().getString("teleport.messages.success") == null) {
+                    getLogger().severe("[Config] ❌ ERREUR CRITIQUE: Les clés de config ne sont pas chargées !");
+                } else {
+                    getLogger().info("[Config] ✔ Vérification OK (teleport.messages.success présent).");
+                }
             }
         } catch (Exception e) {
             getLogger().warning("Impossible de migrer la config: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
