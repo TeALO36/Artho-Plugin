@@ -31,6 +31,8 @@ import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import net.arthonetwork.donation.utils.ConsoleFilter;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Random;
 
@@ -54,6 +56,7 @@ public class ArthoPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        migrateConfig();
         loadConfig();
 
         suggestionManager = new SuggestionManager(this);
@@ -166,6 +169,34 @@ public class ArthoPlugin extends JavaPlugin {
         getLogger().info("Artho-Plugin disabled!");
     }
 
+    /**
+     * Migrates config.yml by copying any missing keys from the default config
+     * bundled in the JAR. This prevents "Message manquant" fallbacks after plugin
+     * updates.
+     */
+    private void migrateConfig() {
+        try (InputStream defaultStream = getResource("config.yml")) {
+            if (defaultStream == null)
+                return;
+            FileConfiguration defaultConfig = org.bukkit.configuration.file.YamlConfiguration
+                    .loadConfiguration(new InputStreamReader(defaultStream));
+            FileConfiguration currentConfig = getConfig();
+            boolean changed = false;
+            for (String key : defaultConfig.getKeys(true)) {
+                if (!currentConfig.contains(key)) {
+                    currentConfig.set(key, defaultConfig.get(key));
+                    changed = true;
+                }
+            }
+            if (changed) {
+                saveConfig();
+                getLogger().info("Config mise à jour avec les nouvelles clés par défaut.");
+            }
+        } catch (Exception e) {
+            getLogger().warning("Impossible de migrer la config: " + e.getMessage());
+        }
+    }
+
     public void loadConfig() {
         reloadConfig();
         FileConfiguration config = getConfig();
@@ -263,7 +294,7 @@ public class ArthoPlugin extends JavaPlugin {
 
     public String getAuthMessage(String path) {
         return ChatColor.translateAlternateColorCodes('&',
-                getConfig().getString("auth.messages." + path, "&cMessage missing: " + path));
+                getConfig().getString("auth.messages." + path, "&cMessage manquant: " + path));
     }
 
     public String getWhitelistMessage() {
