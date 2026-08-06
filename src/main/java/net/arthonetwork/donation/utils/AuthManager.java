@@ -18,6 +18,11 @@ public class AuthManager {
     private final Set<UUID> loggedInPlayers = new HashSet<>();
     private final Map<String, Integer> ipAttempts = new HashMap<>();
     private final Map<String, Long> ipTimeouts = new HashMap<>();
+    // Escalation tracking (in-memory, resets on restart): counts how many times
+    // an IP has been through a full temporary lockout before earning a permanent ban.
+    private final Map<String, Integer> ipBlockCount = new HashMap<>();
+    // Permanent bans (persisted to userdata.yml, survive restarts).
+    private final Set<String> bannedIps = new HashSet<>();
 
     public AuthManager(ArthoPlugin plugin) {
         this.plugin = plugin;
@@ -35,6 +40,7 @@ public class AuthManager {
             }
         }
         userdataConfig = YamlConfiguration.loadConfiguration(userdataFile);
+        bannedIps.addAll(userdataConfig.getStringList("security.banned-ips"));
     }
 
     public boolean isRegistered(UUID uuid) {
@@ -54,12 +60,21 @@ public class AuthManager {
     }
 
     public boolean login(UUID uuid, String password) {
-        String storedHash = userdataConfig.getString(uuid.toString() + ".password");
-        if (storedHash != null && storedHash.equals(hashPassword(password))) {
+        if (checkPassword(uuid, password)) {
             login(uuid);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Verifies a password against the stored hash without mutating any
+     * login state. Used by /linkaccount to check a Java account's password
+     * on behalf of a Bedrock player without logging the Java UUID in.
+     */
+    public boolean checkPassword(UUID uuid, String password) {
+        String storedHash = userdataConfig.getString(uuid.toString() + ".password");
+        return storedHash != null && storedHash.equals(hashPassword(password));
     }
 
     public void login(UUID uuid) {
@@ -112,6 +127,9 @@ public class AuthManager {
     }
 
     public boolean isIpBlocked(String ip) {
+        if (isIpBanned(ip)) {
+            return true;
+        }
         if (ipTimeouts.containsKey(ip)) {
             if (System.currentTimeMillis() < ipTimeouts.get(ip)) {
                 return true;
@@ -128,12 +146,62 @@ public class AuthManager {
         ipAttempts.put(ip, attempts);
         if (attempts >= getMaxAttempts()) {
             ipTimeouts.put(ip, System.currentTimeMillis() + (getLoginTimeout() * 1000L));
+            int blocks = ipBlockCount.getOrDefault(ip, 0) + 1;
+            ipBlockCount.put(ip, blocks);
+            plugin.getLogger().warning("[Sécurité] IP " + ip + " bloquée temporairement (" + getLoginTimeout()
+                    + "s) après " + attempts + " échecs. Blocage n°" + blocks + "/" + getMaxBlocksBeforeBan()
+                    + " avant ban définitif.");
+            if (blocks >= getMaxBlocksBeforeBan()) {
+                banIp(ip);
+            }
         }
     }
 
     public void resetAttempts(String ip) {
         ipAttempts.remove(ip);
         ipTimeouts.remove(ip);
+    }
+
+    // Permanent IP bans (escalation from repeated temporary lockouts)
+
+    public boolean isIpBanned(String ip) {
+        return bannedIps.contains(ip);
+    }
+
+    public void banIp(String ip) {
+        if (bannedIps.add(ip)) {
+            List<String> list = userdataConfig.getStringList("security.banned-ips");
+            list.add(ip);
+            userdataConfig.set("security.banned-ips", list);
+            saveUserdata();
+            plugin.getLogger().warning(
+                    "[Sécurité] IP " + ip + " BANNIE DÉFINITIVEMENT après " + getMaxBlocksBeforeBan()
+                            + " blocages répétés (bruteforce suspecté). Débloquer avec /auth security unban " + ip);
+        }
+    }
+
+    public void unbanIp(String ip) {
+        bannedIps.remove(ip);
+        ipBlockCount.remove(ip);
+        ipAttempts.remove(ip);
+        ipTimeouts.remove(ip);
+        List<String> list = userdataConfig.getStringList("security.banned-ips");
+        list.remove(ip);
+        userdataConfig.set("security.banned-ips", list);
+        saveUserdata();
+    }
+
+    public List<String> getBannedIps() {
+        return new ArrayList<>(bannedIps);
+    }
+
+    public int getMaxBlocksBeforeBan() {
+        return userdataConfig.getInt("config.max-blocks-before-ban", 3);
+    }
+
+    public void setMaxBlocksBeforeBan(int max) {
+        userdataConfig.set("config.max-blocks-before-ban", max);
+        saveUserdata();
     }
 
     // Whitelist & Config Methods
