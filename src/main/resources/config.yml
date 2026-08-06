@@ -104,8 +104,59 @@ teleport:
     teleport-in-progress: "&cVous avez déjà une téléportation en cours !"
 
 
+# ==================== VARIANTES LIÉES (Linked Variants) ====================
+# Système générique pour attribuer une identité visuelle et/ou sonore unique à
+# une entité précise (pas à un type d'entité entier). Ne dépend d'aucun
+# resource pack ou serveur en particulier : chaque variante est déclarée par
+# l'admin dans plugins/Artho-Plugin/variants/<id>.yml. Voir le README pour la
+# documentation complète (comment déclarer une variante, fonctionnement du
+# système de "First Sight").
+#
+# Désactivé par défaut : tant que enabled=false, aucun écouteur n'est
+# enregistré et aucun raycast ne tourne (aucun coût, pas juste masqué).
+features:
+  linked-variants:
+    enabled: false
+    first-sight:
+      # Distance max (en blocs) du raycast qui détecte qu'un joueur regarde
+      # une entité "variante".
+      max-distance: 10
+      # Fréquence (en ticks, 20 = 1s) à laquelle le raycast est effectué pour
+      # chaque joueur en ligne.
+      check-interval-ticks: 10
+
+    # Son joué quand un joueur franchit une couche Y vers le bas (ambiance grotte).
+    # Le son n'est joué qu'à CE joueur, jamais partagé.
+    depth:
+      enabled: false
+      chance: 5          # 1 chance sur 5 à chaque franchissement
+      levels: [40, 0, -40]
+      sound:
+        key: "arthonetwork:cave.alelele"
+        volume: 1.0
+        pitch: 1.0
+        category: AMBIENT
+
+    # Son joué quand un joueur mange avec une barre de vie au-dessus du ratio.
+    eat:
+      enabled: false
+      chance: 5              # 1 chance sur 5
+      min-health-ratio: 0.75 # strictement au-dessus des 3/4 de vie
+      food-only: true        # false = déclenche aussi sur potions et lait
+      sound:
+        keys:
+          - "arthonetwork:eat.bouffe_1"
+          - "arthonetwork:eat.bouffe_2"
+        volume: 1.0
+        pitch: 1.0
+        category: PLAYER
+
 # ==================== ANTI-CHEAT ====================
 anticheat:
+  movement:
+    # Léger détecteur speed/fly, alerte les ops sans jamais bannir automatiquement
+    # (trop de faux positifs possibles avec une détection maison : élytre, potions, lag).
+    enabled: true
   antixray:
     enabled: false
     ignore-ops: true

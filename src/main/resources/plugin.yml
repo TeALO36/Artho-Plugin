@@ -2,6 +2,7 @@ name: Artho-Plugin
 version: ${project.version}
 main: net.arthonetwork.donation.ArthoPlugin
 api-version: 1.13
+softdepend: [floodgate]
 commands:
   annonces:
     description: Gérer les annonces et donations
@@ -31,6 +32,13 @@ commands:
   changepassword:
     description: Changer son mot de passe
     usage: /changepassword <nouveau> <confirmation>
+  linkaccount:
+    description: Lier son compte à un compte existant de l'autre plateforme
+    usage: /linkaccount <bedrock|java> <Pseudo> <MotDePasse>
+  variant:
+    description: Gérer le module Variantes Liées (identités uniques d'entités)
+    usage: /variant <enable|disable|status|list|set|remove|info|reload> [args]
+    permission: arthoplugin.variant.admin
   artho:
     description: Aide globale
     usage: /artho

@@ -1,0 +1,98 @@
+# ============================================================================
+# EXEMPLE DE VARIANTE — module "Variantes Liées"
+#
+# Guide complet : VARIANTES.md  (https://github.com/TeALO36/Artho-Plugin)
+#
+# Un fichier = une variante. Le nom du fichier (sans .yml) est son identifiant,
+# utilisé avec /variant set <id>. Ajoutez autant de fichiers que vous voulez.
+#
+# Ce fichier n'est recréé automatiquement que si le dossier variants/ est vide :
+# vous pouvez le supprimer ou le renommer sans problème.
+#
+# IMPORTANT : ce plugin ne fournit ni son ni texture. Les clés ci-dessous ne
+# correspondent à rien tant que VOUS ne les définissez pas dans votre propre
+# resource pack. Les sons doivent être en OGG Vorbis MONO (le stéréo casse le
+# son positionnel) :  ffmpeg -i src.mp3 -ac 1 -ar 44100 -c:a libvorbis out.ogg
+# ============================================================================
+
+# --- OBLIGATOIRE : type d'entité (enum Bukkit EntityType) -------------------
+# Ex : ZOMBIE, BAT, HORSE, COW, FROG, BEE, PHANTOM, VILLAGER, IRON_GOLEM...
+entity-type: ZOMBIE
+
+# --- Nom informatif, affiché par les commandes d'admin ----------------------
+display-name: "&5&lExemple de Variante"
+
+# --- Marquage automatique : 1 chance sur N à chaque apparition --------------
+# 0 ou absent = la variante ne s'applique qu'à la main via /variant set
+spawn-chance: 50
+
+# --- Apparence native (voir VARIANTES.md §5.6) ------------------------------
+# SEUL moyen vanilla de rendre UNE entité visuellement différente des autres du
+# même type. Ne fonctionne que pour les mobs ayant des variantes natives.
+# Cheval : WHITE, CREAMY, CHESTNUT, BROWN, BLACK, GRAY, DARK_BROWN
+# Laissez vide pour une variante purement sonore.
+# native-variant: CREAMY
+
+# ============================ DÉCLENCHEURS ==================================
+# Activez ceux que vous voulez ; ils se cumulent. Chaque son n'est joué qu'au
+# joueur concerné, jamais diffusé à tout le monde.
+#
+# Champs d'un bloc "sound" :
+#   key      : nom défini dans votre sounds.json, ou un son vanilla
+#              (ex: "minecraft:entity.wither.spawn")
+#   volume   : au-delà de 1.0, augmente la PORTÉE plus que le volume
+#   pitch    : 0.5 (grave) à 2.0 (aigu)
+#   category : MASTER, MUSIC, RECORD, WEATHER, BLOCK, HOSTILE, NEUTRAL,
+#              PLAYER, AMBIENT, VOICE  (= curseur de volume du joueur)
+# ============================================================================
+
+# --- Au PREMIER REGARD, une seule fois par joueur ET par entité -------------
+# Rayon depuis les yeux du joueur, bloqué par les murs. Portée et fréquence se
+# règlent globalement dans config.yml (first-sight.max-distance).
+first-sight:
+  enabled: true
+  sound:
+    key: "monserveur:mob.exemple_rencontre"
+    volume: 1.0
+    pitch: 1.0
+    category: RECORD
+
+# --- Quand un joueur FRAPPE l'entité (à chaque coup) ------------------------
+on-damage:
+  enabled: false
+  sound:
+    key: "monserveur:mob.exemple_cri"
+    volume: 1.0
+    pitch: 1.0
+    category: NEUTRAL
+
+# --- Quand un joueur fait un CLIC DROIT sur l'entité ------------------------
+on-interact:
+  enabled: false
+  sound:
+    key: "monserveur:mob.exemple_salut"
+    volume: 1.0
+    pitch: 1.0
+    category: NEUTRAL
+
+# --- Quand l'entité MEURT (joué au joueur qui l'a tuée) ---------------------
+on-death:
+  enabled: false
+  sound:
+    key: "monserveur:mob.exemple_mort"
+    volume: 1.0
+    pitch: 0.8
+    category: PLAYER
+
+# --- EN BOUCLE tant qu'un joueur est à proximité ----------------------------
+# ATTENTION : interval-ticks doit être >= à la durée de votre son, sinon les
+# lectures se superposent. Son de 12 s -> 240 ticks minimum (20 ticks = 1 s).
+ambient:
+  enabled: false
+  range: 16
+  interval-ticks: 100
+  sound:
+    key: "monserveur:mob.exemple_ambiance"
+    volume: 0.8
+    pitch: 1.0
+    category: HOSTILE
