@@ -24,6 +24,13 @@ public class AuthListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLogin(PlayerLoginEvent event) {
+        String ip = event.getAddress() != null ? event.getAddress().getHostAddress() : null;
+        if (ip != null && authManager.isIpBanned(ip)) {
+            event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
+                    org.bukkit.ChatColor.RED + "Votre IP a été bannie pour trop de tentatives de connexion suspectes.");
+            return;
+        }
+
         if (authManager.isWhitelistEnabled()) {
             if (!authManager.isWhitelisted(event.getPlayer().getName())) {
                 event.disallow(PlayerLoginEvent.Result.KICK_WHITELIST, plugin.getWhitelistMessage());

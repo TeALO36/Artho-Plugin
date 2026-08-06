@@ -69,6 +69,10 @@ public class AuthCommands implements CommandExecutor {
             }
 
             String ip = player.getAddress().getAddress().getHostAddress();
+            if (authManager.isIpBanned(ip)) {
+                player.kickPlayer(ChatColor.RED + "Votre IP est bannie suite à trop de tentatives suspectes.");
+                return true;
+            }
             if (authManager.isIpBlocked(ip)) {
                 long remaining = authManager.getRemainingTime(ip);
                 player.kickPlayer(ChatColor.RED + "Trop de tentatives. Bloqué pour encore " + remaining + " secondes.");
@@ -150,6 +154,9 @@ public class AuthCommands implements CommandExecutor {
                 break;
             case "set":
                 handleSet(sender, args);
+                break;
+            case "security":
+                handleSecurity(sender, args);
                 break;
             default:
                 sendAdminHelp(sender);
@@ -239,11 +246,44 @@ public class AuthCommands implements CommandExecutor {
             } else if (setting.equals("timeout")) {
                 authManager.setLoginTimeout(value);
                 sender.sendMessage(ChatColor.GREEN + "Timeout défini à " + value + " secondes");
+            } else if (setting.equals("max-blocks-before-ban")) {
+                authManager.setMaxBlocksBeforeBan(value);
+                sender.sendMessage(ChatColor.GREEN + "Ban définitif après " + value + " blocages répétés.");
             } else {
                 sender.sendMessage(ChatColor.RED + "Paramètre inconnu.");
             }
         } catch (NumberFormatException e) {
             sender.sendMessage(ChatColor.RED + "La valeur doit être un nombre entier.");
+        }
+    }
+
+    private void handleSecurity(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /auth security <banned|unban> [ip]");
+            return;
+        }
+        String action = args[1].toLowerCase();
+        switch (action) {
+            case "banned":
+                java.util.List<String> banned = authManager.getBannedIps();
+                if (banned.isEmpty()) {
+                    sender.sendMessage(ChatColor.GREEN + "Aucune IP bannie actuellement.");
+                } else {
+                    sender.sendMessage(ChatColor.GOLD + "IPs bannies (" + banned.size() + "): "
+                            + ChatColor.WHITE + String.join(", ", banned));
+                }
+                break;
+            case "unban":
+                if (args.length < 3) {
+                    sender.sendMessage(ChatColor.RED + "Usage: /auth security unban <ip>");
+                    return;
+                }
+                authManager.unbanIp(args[2]);
+                sender.sendMessage(ChatColor.GREEN + "IP " + args[2] + " débannie.");
+                break;
+            default:
+                sender.sendMessage(ChatColor.RED + "Usage: /auth security <banned|unban> [ip]");
+                break;
         }
     }
 
@@ -253,6 +293,7 @@ public class AuthCommands implements CommandExecutor {
         sender.sendMessage(ChatColor.YELLOW + "/auth unregister <player>");
         sender.sendMessage(ChatColor.YELLOW + "/auth reset <player>");
         sender.sendMessage(ChatColor.YELLOW + "/auth whitelist <add|remove|list|on|off>");
-        sender.sendMessage(ChatColor.YELLOW + "/auth set <max-attempts|timeout> <value>");
+        sender.sendMessage(ChatColor.YELLOW + "/auth set <max-attempts|timeout|max-blocks-before-ban> <value>");
+        sender.sendMessage(ChatColor.YELLOW + "/auth security <banned|unban> [ip]");
     }
 }
