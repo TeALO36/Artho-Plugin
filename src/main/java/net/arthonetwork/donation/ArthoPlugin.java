@@ -1,14 +1,18 @@
 package net.arthonetwork.donation;
 
 import net.arthonetwork.donation.commands.AuthCommands;
+import net.arthonetwork.donation.commands.LinkAccountCommand;
 import net.arthonetwork.donation.commands.AnnoncesCommand;
 import net.arthonetwork.donation.commands.HomeCommand;
 import net.arthonetwork.donation.commands.LagCommand;
 import net.arthonetwork.donation.commands.PingCommand;
 import net.arthonetwork.donation.commands.SuggestionCommand;
 import net.arthonetwork.donation.commands.TpaCommand;
+import net.arthonetwork.donation.commands.VariantCommand;
 import net.arthonetwork.donation.listeners.AuthListener;
+import net.arthonetwork.donation.listeners.BedrockAutoLoginListener;
 import net.arthonetwork.donation.listeners.DeathListener;
+import net.arthonetwork.donation.listeners.SpeedFlyListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
 import net.arthonetwork.donation.listeners.TeleportListener;
 import net.arthonetwork.donation.listeners.AntiXrayListener;
@@ -18,8 +22,10 @@ import net.arthonetwork.donation.tasks.TabListUpdateTask;
 import net.arthonetwork.donation.utils.ArthoTabCompleter;
 import net.arthonetwork.donation.utils.AuthManager;
 import net.arthonetwork.donation.utils.HomeManager;
+import net.arthonetwork.donation.utils.LinkManager;
 import net.arthonetwork.donation.utils.SuggestionManager;
 import net.arthonetwork.donation.utils.TeleportManager;
+import net.arthonetwork.donation.variants.LinkedVariantsFeature;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -46,6 +52,7 @@ public class ArthoPlugin extends JavaPlugin {
     private BukkitRunnable task;
     private SuggestionManager suggestionManager;
     private AuthManager authManager;
+    private LinkManager linkManager;
     private TeleportManager teleportManager;
     private HomeManager homeManager;
     private AntiXrayListener antiXrayListener;
@@ -54,6 +61,7 @@ public class ArthoPlugin extends JavaPlugin {
     private boolean tipsEnabled;
     private ConsoleFilter consoleFilter;
     private BukkitRunnable tipsTask;
+    private LinkedVariantsFeature linkedVariantsFeature;
 
     @Override
     public void onEnable() {
@@ -63,6 +71,7 @@ public class ArthoPlugin extends JavaPlugin {
 
         suggestionManager = new SuggestionManager(this);
         authManager = new AuthManager(this);
+        linkManager = new LinkManager(this);
         teleportManager = new TeleportManager(this);
         homeManager = new HomeManager(this, teleportManager);
         antiXrayListener = new AntiXrayListener(this);
@@ -96,6 +105,12 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("auth").setExecutor(authCmd);
         getCommand("changepassword").setExecutor(authCmd);
 
+        getCommand("linkaccount").setExecutor(new LinkAccountCommand(this, authManager, linkManager));
+
+        linkedVariantsFeature = new LinkedVariantsFeature(this);
+        getCommand("variant").setExecutor(new VariantCommand(linkedVariantsFeature));
+        linkedVariantsFeature.init(); // no-op unless features.linked-variants.enabled is true
+
         // Teleportation commands
         TpaCommand tpaCmd = new TpaCommand(teleportManager);
         getCommand("tpa").setExecutor(tpaCmd);
@@ -121,6 +136,8 @@ public class ArthoPlugin extends JavaPlugin {
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new AuthListener(this, authManager), this);
+        getServer().getPluginManager().registerEvents(new BedrockAutoLoginListener(this, authManager, linkManager), this);
+        getServer().getPluginManager().registerEvents(new SpeedFlyListener(this, authManager), this);
         getServer().getPluginManager().registerEvents(new TeleportListener(teleportManager), this);
         getServer().getPluginManager().registerEvents(antiXrayListener, this);
         getServer().getPluginManager().registerEvents(new DeathListener(), this);
@@ -155,6 +172,9 @@ public class ArthoPlugin extends JavaPlugin {
         }
         if (tipsTask != null && !tipsTask.isCancelled()) {
             tipsTask.cancel();
+        }
+        if (linkedVariantsFeature != null) {
+            linkedVariantsFeature.shutdown();
         }
 
         // Unregister Console Filter

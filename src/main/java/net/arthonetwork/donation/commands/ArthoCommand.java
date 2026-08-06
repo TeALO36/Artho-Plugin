@@ -58,6 +58,39 @@ public class ArthoCommand implements CommandExecutor {
                 return true;
             }
 
+            if (sub.equals("anticheat")) {
+                if (!sender.hasPermission("arthoplugin.admin")) {
+                    sender.sendMessage(ChatColor.RED + "Permission refusée.");
+                    return true;
+                }
+
+                if (args.length < 2) {
+                    boolean enabled = plugin.getConfig().getBoolean("anticheat.movement.enabled", true);
+                    sender.sendMessage(ChatColor.GOLD + "Anticheat mouvement (speed/fly) Status: "
+                            + (enabled ? ChatColor.GREEN + "ON" : ChatColor.RED + "OFF"));
+                    sender.sendMessage(ChatColor.YELLOW + "Usage: /artho anticheat <on|off|status>");
+                    return true;
+                }
+
+                String state = args[1].toLowerCase();
+                if (state.equals("on") || state.equals("enable")) {
+                    plugin.getConfig().set("anticheat.movement.enabled", true);
+                    plugin.saveConfig();
+                    sender.sendMessage(ChatColor.GREEN + "Anticheat mouvement activé.");
+                } else if (state.equals("off") || state.equals("disable")) {
+                    plugin.getConfig().set("anticheat.movement.enabled", false);
+                    plugin.saveConfig();
+                    sender.sendMessage(ChatColor.RED + "Anticheat mouvement désactivé.");
+                } else if (state.equals("status")) {
+                    boolean enabled = plugin.getConfig().getBoolean("anticheat.movement.enabled", true);
+                    sender.sendMessage(ChatColor.GOLD + "Anticheat mouvement Status: "
+                            + (enabled ? ChatColor.GREEN + "ON" : ChatColor.RED + "OFF"));
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Usage: /artho anticheat <on|off|status>");
+                }
+                return true;
+            }
+
             if (sub.equals("antixray")) {
                 if (!sender.hasPermission("arthoplugin.admin")) {
                     sender.sendMessage(ChatColor.RED + "Permission refusée.");
@@ -108,6 +141,8 @@ public class ArthoCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.YELLOW + "  /login <mdp> " + ChatColor.WHITE + "- Se connecter.");
         sender.sendMessage(
                 ChatColor.YELLOW + "  /changepassword <new> <confirm> " + ChatColor.WHITE + "- Changer mdp.");
+        sender.sendMessage(ChatColor.YELLOW + "  /linkaccount <bedrock|java> <pseudo> <mdp> " + ChatColor.WHITE
+                + "- Lier son compte à l'autre plateforme.");
         if (sender.hasPermission("arthoplugin.admin")) {
             sender.sendMessage(ChatColor.RED + "  /auth reset <joueur> " + ChatColor.WHITE + "- Reset mdp joueur.");
             sender.sendMessage(ChatColor.RED + "  /auth whitelist <add|remove|list|on|off> " + ChatColor.WHITE
@@ -136,6 +171,10 @@ public class ArthoCommand implements CommandExecutor {
             sender.sendMessage(ChatColor.RED + "  /artho tips <on|off> " + ChatColor.WHITE + "- Activer astuces.");
             sender.sendMessage(
                     ChatColor.RED + "  /artho antixray <on|off> " + ChatColor.WHITE + "- Gérer l'Anti-Xray.");
+            sender.sendMessage(ChatColor.RED + "  /artho anticheat <on|off> " + ChatColor.WHITE
+                    + "- Gérer l'anticheat speed/fly.");
+            sender.sendMessage(ChatColor.RED + "  /variant enable " + ChatColor.WHITE
+                    + "- Activer le module Variantes Liées (désactivé par défaut).");
         }
 
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");
