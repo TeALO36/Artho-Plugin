@@ -31,10 +31,13 @@ public class VariantManager {
     private final Map<String, Variant> variantsById = new LinkedHashMap<>();
     private File variantsFolder;
     private final java.util.Random random = new java.util.Random();
+    private DisplayModelManager displayModels;
+    private RigManager rigManager;
 
     public VariantManager(ArthoPlugin plugin) {
         this.plugin = plugin;
         this.variantIdKey = new NamespacedKey(plugin, "linked_variant_id");
+        this.displayModels = new DisplayModelManager(plugin);
     }
 
     public void reload() {
@@ -85,7 +88,8 @@ public class VariantManager {
         }
 
         String displayName = config.getString("display-name");
-        int spawnChance = config.getInt("spawn-chance", 0);
+        String spawnRaw = config.getString("spawn-chance", "0");
+        double spawnProbability = parseChance(spawnRaw, file.getName());
         String nativeVariant = config.getString("native-variant");
 
         Variant.SoundDef firstSight = config.getBoolean("first-sight.enabled", true)
@@ -104,9 +108,98 @@ public class VariantManager {
         Variant.SoundDef onDeath = config.getBoolean("on-death.enabled", false)
                 ? parseSound(config.getConfigurationSection("on-death.sound")) : null;
 
-        return new Variant(id, entityType, displayName, spawnChance, nativeVariant,
+        return new Variant(id, entityType, displayName, spawnProbability, spawnRaw, nativeVariant,
                 firstSight, ambient, ambientRange, ambientInterval,
-                onDamage, onInteract, onDeath);
+                onDamage, onInteract, onDeath, config.getBoolean("silence-vanilla", false),
+                config.getString("display-model"),
+                config.getString("rig-model"),
+                (float) config.getDouble("display-scale", 1.7),
+                (float) config.getDouble("display-offset-y", -2.2),
+                (float) config.getDouble("swing-amplitude", 0.45));
+    }
+
+    /**
+     * Accepts two notations for "how often does this variant apply":
+     * <ul>
+     *   <li>{@code 5/7} - a fraction: five out of seven</li>
+     *   <li>{@code 50} - a percentage: fifty percent (a trailing % is optional)</li>
+     * </ul>
+     * Returns a probability between 0 and 1; 0 disables automatic assignment.
+     */
+    public static double parseChance(String raw, String context) {
+        if (raw == null) {
+            return 0;
+        }
+        String v = raw.trim();
+        if (v.endsWith("%")) {
+            v = v.substring(0, v.length() - 1).trim();
+        }
+        if (v.isEmpty()) {
+            return 0;
+        }
+        try {
+            if (v.contains("/")) {
+                String[] parts = v.split("/", 2);
+                double den = Double.parseDouble(parts[1].trim());
+                return den <= 0 ? 0 : clamp(Double.parseDouble(parts[0].trim()) / den);
+            }
+            return clamp(Double.parseDouble(v) / 100.0);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    /** Formats a probability as the percentage stored in the variant file. */
+    public static String toPercent(double probability) {
+        double pct = probability * 100.0;
+        if (Math.abs(pct - Math.rint(pct)) < 0.005) {
+            return String.valueOf((long) Math.rint(pct));
+        }
+        return String.format(java.util.Locale.ROOT, "%.2f", pct).replaceAll("0+$", "").replaceAll("\\.$", "");
+    }
+
+    private static double clamp(double d) {
+        return d < 0 ? 0 : (d > 1 ? 1 : d);
+    }
+
+    /**
+     * Rewrites only the {@code spawn-chance} line of a variant file, so the
+     * admin's comments and formatting are preserved.
+     */
+    public boolean writeSpawnChance(String variantId, String newValue) {
+        return writeKey(variantId, "spawn-chance", newValue);
+    }
+
+    /** Rewrites a single top-level scalar key, preserving comments and layout. */
+    public boolean writeKey(String variantId, String key, String newValue) {
+        File file = new File(new File(plugin.getDataFolder(), "variants"), variantId + ".yml");
+        if (!file.exists()) {
+            return false;
+        }
+        try {
+            java.util.List<String> lines = java.nio.file.Files.readAllLines(file.toPath(),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            boolean found = false;
+            for (int i = 0; i < lines.size(); i++) {
+                if (lines.get(i).trim().startsWith(key + ":")) {
+                    // Preserve any trailing comment the admin wrote on that line.
+                    String line = lines.get(i);
+                    int hash = line.indexOf('#');
+                    String comment = hash >= 0 ? "  " + line.substring(hash).trim() : "";
+                    lines.set(i, key + ": " + newValue + comment);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                lines.add(key + ": " + newValue);
+            }
+            java.nio.file.Files.write(file.toPath(), lines, java.nio.charset.StandardCharsets.UTF_8);
+            return true;
+        } catch (java.io.IOException e) {
+            plugin.getLogger().severe("[Variants] Ecriture de " + file.getName() + " impossible: " + e.getMessage());
+            return false;
+        }
     }
 
     private Variant.SoundDef parseSound(ConfigurationSection sec) {
@@ -119,13 +212,18 @@ public class VariantManager {
         }
         float volume = (float) sec.getDouble("volume", 1.0);
         float pitch = (float) sec.getDouble("pitch", 1.0);
+        float pitchVariation = (float) sec.getDouble("pitch-variation", 0.0);
         SoundCategory category;
         try {
             category = SoundCategory.valueOf(sec.getString("category", "MASTER").trim().toUpperCase());
         } catch (IllegalArgumentException e) {
             category = SoundCategory.MASTER;
         }
-        return new Variant.SoundDef(key, volume, pitch, category);
+        return new Variant.SoundDef(key, volume, pitch, pitchVariation, category);
+    }
+
+    public void setRigManager(RigManager rigManager) {
+        this.rigManager = rigManager;
     }
 
     public Variant getVariant(String id) {
@@ -151,6 +249,14 @@ public class VariantManager {
     public void assign(Entity entity, Variant variant) {
         entity.getPersistentDataContainer().set(variantIdKey, PersistentDataType.STRING, variant.getId());
         applyNativeVariant(entity, variant.getNativeVariant());
+        if (variant.isSilenceVanilla()) {
+            // Mutes this one entity only; the plugin's own sounds still play.
+            entity.setSilent(true);
+        }
+        displayModels.apply(entity, variant);
+        if (rigManager != null) {
+            rigManager.create(entity, variant);
+        }
     }
 
     /**
@@ -199,6 +305,10 @@ public class VariantManager {
 
     public void removeVariant(Entity entity) {
         entity.getPersistentDataContainer().remove(variantIdKey);
+        displayModels.clear(entity);
+        if (rigManager != null) {
+            rigManager.destroy(entity);
+        }
     }
 
     public String getVariantId(Entity entity) {

@@ -124,6 +124,9 @@ features:
       # Fréquence (en ticks, 20 = 1s) à laquelle le raycast est effectué pour
       # chaque joueur en ligne.
       check-interval-ticks: 10
+      # Épaisseur du rayon. Un rayon fin rate presque toujours les petites
+      # entités rapides (abeilles) : élargir rend le "regard" bien plus tolérant.
+      ray-size: 0.75
 
     # Son joué quand un joueur franchit une couche Y vers le bas (ambiance grotte).
     # Le son n'est joué qu'à CE joueur, jamais partagé.

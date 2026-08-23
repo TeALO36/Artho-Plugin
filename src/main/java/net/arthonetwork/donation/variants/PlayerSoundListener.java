@@ -68,6 +68,48 @@ public class PlayerSoundListener implements Listener {
         }
     }
 
+    /** Read-only view of one player-centric trigger, for {@code /variant list}. */
+    public static final class TriggerInfo {
+        private final String id;
+        private final String label;
+        private final boolean enabled;
+        private final int chance;
+        private final List<String> keys;
+        private final String condition;
+
+        TriggerInfo(String id, String label, boolean enabled, int chance,
+                    List<String> keys, String condition) {
+            this.id = id;
+            this.label = label;
+            this.enabled = enabled;
+            this.chance = chance;
+            this.keys = Collections.unmodifiableList(new ArrayList<>(keys));
+            this.condition = condition;
+        }
+
+        public String getId() { return id; }
+        public String getLabel() { return label; }
+        public boolean isEnabled() { return enabled; }
+        public int getChance() { return chance; }
+        public List<String> getKeys() { return keys; }
+        public String getCondition() { return condition; }
+    }
+
+    /**
+     * Snapshot of the player-centric triggers. These are configured under
+     * features.linked-variants in config.yml rather than in variants/, so they
+     * had no in-game listing even though they belong to the same module.
+     */
+    public List<TriggerInfo> getTriggers() {
+        List<TriggerInfo> out = new ArrayList<>();
+        out.add(new TriggerInfo("depth", "Grotte / profondeur", depth.enabled, depth.chance,
+                depth.keys, "paliers Y " + depthLevels));
+        out.add(new TriggerInfo("eat", "Repas / rassasié", eat.enabled, eat.chance,
+                eat.keys, "vie > " + Math.round(eatMinHealthRatio * 100) + "%"
+                        + (eatFoodOnly ? ", nourriture uniquement" : "")));
+        return out;
+    }
+
     private void load(ConfigurationSection sec, SoundConfig target, String keyPath) {
         if (sec == null) {
             return;

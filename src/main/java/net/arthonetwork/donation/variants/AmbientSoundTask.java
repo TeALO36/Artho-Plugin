@@ -5,6 +5,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.Random;
+
 /**
  * Plays a variant's looping ambient sound (e.g. an insect buzz) to each nearby
  * player individually, so the audio is never shared between players.
@@ -12,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class AmbientSoundTask extends BukkitRunnable {
 
     private final VariantManager variantManager;
+    private final Random random = new Random();
     private long tick = 0;
 
     public AmbientSoundTask(VariantManager variantManager) {
@@ -39,7 +42,7 @@ public class AmbientSoundTask extends BukkitRunnable {
                     continue;
                 }
                 Variant.SoundDef s = variant.getAmbient();
-                player.playSound(nearby.getLocation(), s.key, s.category, s.volume, s.pitch);
+                player.playSound(nearby.getLocation(), s.key, s.category, s.volume, s.rollPitch(random));
             }
         }
     }

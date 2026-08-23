@@ -15,18 +15,22 @@ public class LinkedVariantsFeature {
     private final ArthoPlugin plugin;
     private final VariantManager variantManager;
     private final SeenTracker seenTracker;
+    private final RigManager rigManager;
     private VariantPlayerListener playerListener;
     private VariantSpawnListener spawnListener;
     private PlayerSoundListener playerSoundListener;
     private VariantInteractionListener interactionListener;
     private BukkitTask firstSightTask;
     private BukkitTask ambientTask;
+    private BukkitTask displaySyncTask;
+    private BukkitTask rigTask;
     private boolean running = false;
 
     public LinkedVariantsFeature(ArthoPlugin plugin) {
         this.plugin = plugin;
         this.variantManager = new VariantManager(plugin);
         this.seenTracker = new SeenTracker(plugin);
+        this.rigManager = new RigManager(plugin);
     }
 
     /** Starts the module if enabled in config.yml. Safe to call once at plugin startup. */
@@ -66,6 +70,14 @@ public class LinkedVariantsFeature {
         return variantManager;
     }
 
+    public RigManager getRigManager() {
+        return rigManager;
+    }
+
+    public PlayerSoundListener getPlayerSoundListener() {
+        return playerSoundListener;
+    }
+
     public SeenTracker getSeenTracker() {
         return seenTracker;
     }
@@ -76,6 +88,7 @@ public class LinkedVariantsFeature {
 
     private void start() {
         variantManager.reload();
+        variantManager.setRigManager(rigManager);
 
         playerListener = new VariantPlayerListener(seenTracker);
         plugin.getServer().getPluginManager().registerEvents(playerListener, plugin);
@@ -86,17 +99,21 @@ public class LinkedVariantsFeature {
         playerSoundListener = new PlayerSoundListener(plugin);
         plugin.getServer().getPluginManager().registerEvents(playerSoundListener, plugin);
 
-        interactionListener = new VariantInteractionListener(variantManager);
+        interactionListener = new VariantInteractionListener(variantManager, rigManager);
         plugin.getServer().getPluginManager().registerEvents(interactionListener, plugin);
 
         double maxDistance = plugin.getConfig().getDouble("features.linked-variants.first-sight.max-distance", 10);
         long intervalTicks = plugin.getConfig().getLong("features.linked-variants.first-sight.check-interval-ticks",
                 10);
 
-        FirstSightTask task = new FirstSightTask(variantManager, seenTracker, maxDistance);
+        double raySize = plugin.getConfig().getDouble("features.linked-variants.first-sight.ray-size", 0.75);
+        FirstSightTask task = new FirstSightTask(variantManager, seenTracker, maxDistance, raySize);
         firstSightTask = task.runTaskTimer(plugin, intervalTicks, intervalTicks);
 
         ambientTask = new AmbientSoundTask(variantManager).runTaskTimer(plugin, 20L, 20L);
+        displaySyncTask = new DisplaySyncTask().runTaskTimer(plugin, 5L, 2L);
+        // Le rig doit etre recalcule a chaque tick pour que la marche soit fluide.
+        rigTask = plugin.getServer().getScheduler().runTaskTimer(plugin, rigManager::tickAll, 5L, 1L);
 
         running = true;
         plugin.getLogger().info("[Variants] Module Variantes Liées activé.");
@@ -111,6 +128,15 @@ public class LinkedVariantsFeature {
             ambientTask.cancel();
             ambientTask = null;
         }
+        if (displaySyncTask != null) {
+            displaySyncTask.cancel();
+            displaySyncTask = null;
+        }
+        if (rigTask != null) {
+            rigTask.cancel();
+            rigTask = null;
+        }
+        rigManager.removeAll();
         if (playerListener != null) {
             HandlerList.unregisterAll(playerListener);
             playerListener = null;

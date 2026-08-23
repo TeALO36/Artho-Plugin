@@ -45,16 +45,16 @@ public class HiveRegistry {
 
     /**
      * Whether this hive is marked for the given variant, rolling once
-     * (1-in-chance) the first time the hive is seen and caching the result.
+     * the first time the hive is seen, then caching the result.
      */
-    public boolean isHiveMarked(Location hive, String variantId, int chance) {
+    public boolean isHiveMarked(Location hive, String variantId, double probability) {
         String key = keyOf(hive);
         String stored = cache.get(key);
         if (stored != null) {
             return stored.equals(variantId);
         }
 
-        boolean win = random.nextInt(Math.max(1, chance)) == 0;
+        boolean win = random.nextDouble() < probability;
         String value = win ? variantId : "";
         cache.put(key, value);
         config.set(key, value);

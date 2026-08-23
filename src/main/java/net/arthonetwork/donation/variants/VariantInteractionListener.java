@@ -15,14 +15,22 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
  */
 public class VariantInteractionListener implements Listener {
 
-    private final VariantManager variantManager;
+    private final java.util.Random random = new java.util.Random();
 
-    public VariantInteractionListener(VariantManager variantManager) {
+    private final VariantManager variantManager;
+    private final RigManager rigManager;
+
+    public VariantInteractionListener(VariantManager variantManager, RigManager rigManager) {
         this.variantManager = variantManager;
+        this.rigManager = rigManager;
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onDamage(EntityDamageByEntityEvent event) {
+        // A rigged entity striking something plays its attack animation, whoever
+        // the target is - that is the golem swinging, not the golem being hit.
+        rigManager.onAttack(event.getDamager());
+
         if (!(event.getDamager() instanceof Player)) {
             return;
         }
@@ -59,6 +67,6 @@ public class VariantInteractionListener implements Listener {
         if (sound == null || sound.key == null) {
             return;
         }
-        player.playSound(target.getLocation(), sound.key, sound.category, sound.volume, sound.pitch);
+        player.playSound(target.getLocation(), sound.key, sound.category, sound.volume, sound.rollPitch(random));
     }
 }

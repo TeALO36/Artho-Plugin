@@ -55,10 +55,10 @@ public class VariantSpawnListener implements Listener {
             // Ask the bee which hive it belongs to rather than scanning blocks.
             Location hive = ((Bee) entity).getHive();
             if (hive != null) {
-                return hiveRegistry.isHiveMarked(hive, variant.getId(), variant.getSpawnChance());
+                return hiveRegistry.isHiveMarked(hive, variant.getId(), variant.getSpawnProbability());
             }
             // Hive-less bee (wandering): fall back to an individual roll.
         }
-        return random.nextInt(Math.max(1, variant.getSpawnChance())) == 0;
+        return random.nextDouble() < variant.getSpawnProbability();
     }
 }
