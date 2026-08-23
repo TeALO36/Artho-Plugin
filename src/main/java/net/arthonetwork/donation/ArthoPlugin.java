@@ -109,6 +109,11 @@ public class ArthoPlugin extends JavaPlugin {
 
         linkedVariantsFeature = new LinkedVariantsFeature(this);
         getCommand("variant").setExecutor(new VariantCommand(linkedVariantsFeature));
+
+        net.arthonetwork.donation.commands.VanishCommand vanishCmd =
+                new net.arthonetwork.donation.commands.VanishCommand(this);
+        getCommand("vanish").setExecutor(vanishCmd);
+        getServer().getPluginManager().registerEvents(vanishCmd, this);
         linkedVariantsFeature.init(); // no-op unless features.linked-variants.enabled is true
 
         // Teleportation commands

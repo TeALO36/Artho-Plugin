@@ -164,6 +164,16 @@ public class ArthoCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.YELLOW + "  /ping " + ChatColor.WHITE + "- Voir sa latence.");
         sender.sendMessage(ChatColor.YELLOW + "  /lag " + ChatColor.WHITE + "- Voir les infos de lag.");
 
+        sender.sendMessage(ChatColor.GOLD + "\u27a4 T\u00e9l\u00e9portation:");
+        sender.sendMessage(ChatColor.YELLOW + "  /tpa <joueur> " + ChatColor.WHITE + "- Demander \u00e0 se t\u00e9l\u00e9porter.");
+        sender.sendMessage(ChatColor.YELLOW + "  /tpaccept " + ChatColor.WHITE + "- Accepter une demande.");
+        sender.sendMessage(ChatColor.YELLOW + "  /tpdeny " + ChatColor.WHITE + "- Refuser une demande.");
+        sender.sendMessage(ChatColor.YELLOW + "  /tpcancel " + ChatColor.WHITE + "- Annuler sa demande.");
+        sender.sendMessage(ChatColor.YELLOW + "  /sethome <nom> " + ChatColor.WHITE + "- Cr\u00e9er un point de retour.");
+        sender.sendMessage(ChatColor.YELLOW + "  /home <nom> " + ChatColor.WHITE + "- S'y t\u00e9l\u00e9porter.");
+        sender.sendMessage(ChatColor.YELLOW + "  /homes " + ChatColor.WHITE + "- Lister ses homes.");
+        sender.sendMessage(ChatColor.YELLOW + "  /delhome <nom> " + ChatColor.WHITE + "- Supprimer un home.");
+
         if (sender.hasPermission("arthoplugin.admin")) {
             sender.sendMessage(ChatColor.GOLD + "➤ Administration:");
             sender.sendMessage(
@@ -175,6 +185,10 @@ public class ArthoCommand implements CommandExecutor {
                     + "- Gérer l'anticheat speed/fly.");
             sender.sendMessage(ChatColor.RED + "  /variant enable " + ChatColor.WHITE
                     + "- Activer le module Variantes Liées (désactivé par défaut).");
+            if (sender.hasPermission("arthoplugin.vanish")) {
+                sender.sendMessage(ChatColor.RED + "  /vanish " + ChatColor.WHITE
+                        + "- Se rendre invisible (simule une déconnexion).");
+            }
         }
 
         sender.sendMessage(ChatColor.DARK_PURPLE + "========================================");

@@ -65,9 +65,13 @@ public class VariantCommand implements CommandExecutor {
 
         switch (sub) {
             case "reload":
-                feature.getVariantManager().reload();
-                sender.sendMessage(ChatColor.GREEN + "Catalogue de variantes rechargé ("
-                        + feature.getVariantManager().getAllVariants().size() + " variante(s)).");
+                feature.reloadConfiguration();
+                sender.sendMessage(ChatColor.GREEN + "Rechargé : config.yml + "
+                        + feature.getVariantManager().getAllVariants().size()
+                        + " variante(s) + sons joueur.");
+                return true;
+            case "testsound":
+                handleTestSound(sender, args);
                 return true;
             case "list":
                 handleList(sender);
@@ -97,6 +101,34 @@ public class VariantCommand implements CommandExecutor {
                 sendHelp(sender);
                 return true;
         }
+    }
+
+    /**
+     * Plays a player trigger's sound on demand. Both triggers are deliberately
+     * rare (one roll in five, behind a Y crossing or a health threshold), so
+     * without this there is no way to tell a silent bug from an unlucky streak.
+     */
+    private void handleTestSound(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            return;
+        }
+        PlayerSoundListener listener = feature.getPlayerSoundListener();
+        if (listener == null) {
+            sender.sendMessage(ChatColor.RED + "Les sons joueur ne sont pas chargés.");
+            return;
+        }
+        if (args.length != 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /variant testsound <depth|eat>");
+            return;
+        }
+        Player player = (Player) sender;
+        if (!listener.playTrigger(player, args[1])) {
+            sender.sendMessage(ChatColor.RED + "Déclencheur '" + args[1]
+                    + "' inconnu ou sans son. Voir /variant list.");
+            return;
+        }
+        sender.sendMessage(ChatColor.GREEN + "Son du déclencheur '" + args[1] + "' joué.");
     }
 
     private void handleList(CommandSender sender) {
@@ -449,6 +481,8 @@ public class VariantCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.YELLOW + "/variant enable|disable|status " + ChatColor.WHITE
                 + "- Activer/désactiver le module.");
         sender.sendMessage(ChatColor.YELLOW + "/variant list " + ChatColor.WHITE + "- Lister les variantes.");
+        sender.sendMessage(ChatColor.YELLOW + "/variant testsound <depth|eat> " + ChatColor.WHITE
+                + "- Jouer un son joueur sans attendre le tirage.");
         sender.sendMessage(ChatColor.YELLOW + "/variant summon <id> " + ChatColor.WHITE
                 + "- Invoquer l'entité déjà marquée (idéal pour tester).");
         sender.sendMessage(ChatColor.YELLOW + "/variant testbeds [nb] [couleur] " + ChatColor.WHITE

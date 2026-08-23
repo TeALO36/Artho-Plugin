@@ -78,6 +78,25 @@ public class LinkedVariantsFeature {
         return playerSoundListener;
     }
 
+    /**
+     * Re-reads config.yml and the variants/ catalogue with no restart. The
+     * player sound triggers snapshot their configuration at construction (the
+     * move event fires far too often to re-read it), so the listener has to be
+     * rebuilt rather than mutated in place.
+     */
+    public void reloadConfiguration() {
+        plugin.reloadConfig();
+        variantManager.reload();
+        if (!running) {
+            return;
+        }
+        if (playerSoundListener != null) {
+            HandlerList.unregisterAll(playerSoundListener);
+        }
+        playerSoundListener = new PlayerSoundListener(plugin);
+        plugin.getServer().getPluginManager().registerEvents(playerSoundListener, plugin);
+    }
+
     public SeenTracker getSeenTracker() {
         return seenTracker;
     }

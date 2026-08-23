@@ -117,6 +117,10 @@ teleport:
 features:
   linked-variants:
     enabled: false
+    # Journalise en console chaque franchissement de palier et chaque repas,
+    # avec le resultat du tirage. Les declencheurs etant rares (1 sur 5), c'est
+    # le seul moyen de distinguer un bug d'une serie de tirages perdants.
+    debug: false
     first-sight:
       # Distance max (en blocs) du raycast qui détecte qu'un joueur regarde
       # une entité "variante".

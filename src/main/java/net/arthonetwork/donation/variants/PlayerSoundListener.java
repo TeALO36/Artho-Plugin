@@ -40,6 +40,8 @@ public class PlayerSoundListener implements Listener {
         SoundCategory category = SoundCategory.AMBIENT;
     }
 
+    private final ArthoPlugin plugin;
+    private final boolean debug;
     private final Random random = new Random();
     private final Map<UUID, Integer> lastY = new HashMap<>();
 
@@ -50,6 +52,8 @@ public class PlayerSoundListener implements Listener {
     private boolean eatFoodOnly = true;
 
     public PlayerSoundListener(ArthoPlugin plugin) {
+        this.plugin = plugin;
+        this.debug = plugin.getConfig().getBoolean("features.linked-variants.debug", false);
         ConfigurationSection root = plugin.getConfig().getConfigurationSection("features.linked-variants");
         if (root == null) {
             return;
@@ -147,7 +151,13 @@ public class PlayerSoundListener implements Listener {
         for (int threshold : depthLevels) {
             // Fired exactly on the tick the player crosses the threshold downwards.
             if (prev > threshold && toY <= threshold) {
-                if (random.nextInt(depth.chance) == 0) {
+                boolean won = random.nextInt(depth.chance) == 0;
+                if (debug) {
+                    plugin.getLogger().info("[Variants/debug] " + event.getPlayer().getName()
+                            + " franchit Y=" + threshold + " en descendant (" + prev + " -> " + toY
+                            + ") : tirage 1/" + depth.chance + " -> " + (won ? "JOUE" : "rate"));
+                }
+                if (won) {
                     play(event.getPlayer(), depth);
                 }
                 return;
@@ -174,13 +184,41 @@ public class PlayerSoundListener implements Listener {
 
         Player player = event.getPlayer();
         double max = maxHealth(player);
-        if (max <= 0 || player.getHealth() / max <= eatMinHealthRatio) {
+        double ratio = max <= 0 ? 0 : player.getHealth() / max;
+        if (max <= 0 || ratio <= eatMinHealthRatio) {
+            if (debug) {
+                plugin.getLogger().info("[Variants/debug] " + player.getName() + " mange "
+                        + event.getItem().getType() + " : vie " + Math.round(ratio * 100)
+                        + "% <= seuil " + Math.round(eatMinHealthRatio * 100) + "% -> ignore");
+            }
             return;
         }
-        if (random.nextInt(eat.chance) != 0) {
-            return;
+        boolean won = random.nextInt(eat.chance) == 0;
+        if (debug) {
+            plugin.getLogger().info("[Variants/debug] " + player.getName() + " mange "
+                    + event.getItem().getType() + " a " + Math.round(ratio * 100)
+                    + "% de vie : tirage 1/" + eat.chance + " -> " + (won ? "JOUE" : "rate"));
         }
-        play(player, eat);
+        if (won) {
+            play(player, eat);
+        }
+    }
+
+    /**
+     * Plays a trigger's sound immediately, bypassing both its probability roll
+     * and its conditions. Backs /variant testsound: the triggers are rare by
+     * design, which makes them impossible to verify by just playing.
+     *
+     * @return false when no trigger carries that id or it has no sound configured
+     */
+    public boolean playTrigger(Player player, String id) {
+        SoundConfig cfg = "depth".equalsIgnoreCase(id) ? depth
+                : "eat".equalsIgnoreCase(id) ? eat : null;
+        if (cfg == null || cfg.keys.isEmpty()) {
+            return false;
+        }
+        play(player, cfg);
+        return true;
     }
 
     /**
