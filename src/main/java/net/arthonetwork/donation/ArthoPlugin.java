@@ -28,6 +28,12 @@ import net.arthonetwork.donation.utils.TeleportManager;
 import net.arthonetwork.donation.variants.LinkedVariantsFeature;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.entity.Player;
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -272,6 +278,46 @@ public class ArthoPlugin extends JavaPlugin {
         scheduleNextBroadcast();
     }
 
+    /**
+     * Broadcasts a message whose "$link" placeholder becomes a real clickable
+     * component. Sending plain legacy text left it up to the client's "web
+     * links" chat option, which is off for a lot of players - the URL then
+     * showed up as dead text.
+     */
+    private void broadcastWithLink(String rawMsg) {
+        String colored = ChatColor.translateAlternateColorCodes('&', rawMsg);
+        if (!colored.contains("$link") || donationLink == null || donationLink.isEmpty()) {
+            Bukkit.broadcastMessage(colored.replace("$link", donationLink == null ? "" : donationLink));
+            return;
+        }
+
+        int at = colored.indexOf("$link");
+        BaseComponent[] before = TextComponent.fromLegacyText(colored.substring(0, at));
+        BaseComponent[] after = TextComponent.fromLegacyText(colored.substring(at + "$link".length()));
+
+        TextComponent link = new TextComponent(donationLink);
+        link.setColor(net.md_5.bungee.api.ChatColor.AQUA);
+        link.setUnderlined(true);
+        link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, donationLink));
+        link.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                new Text(ChatColor.GRAY + "Cliquez pour ouvrir " + ChatColor.WHITE + donationLink)));
+
+        TextComponent full = new TextComponent("");
+        for (BaseComponent c : before) {
+            full.addExtra(c);
+        }
+        full.addExtra(link);
+        for (BaseComponent c : after) {
+            full.addExtra(c);
+        }
+
+        for (Player online : Bukkit.getOnlinePlayers()) {
+            online.spigot().sendMessage(full);
+        }
+        // La console ne gere pas les composants : elle recoit la version texte.
+        Bukkit.getConsoleSender().sendMessage(colored.replace("$link", donationLink));
+    }
+
     private void scheduleNextBroadcast() {
         if (!donationEnabled)
             return;
@@ -288,9 +334,7 @@ public class ArthoPlugin extends JavaPlugin {
             public void run() {
                 if (!messages.isEmpty()) {
                     String randomMsg = messages.get(new Random().nextInt(messages.size()));
-                    String fullMsg = ChatColor.translateAlternateColorCodes('&',
-                            randomMsg.replace("$link", donationLink));
-                    Bukkit.broadcastMessage(fullMsg);
+                    broadcastWithLink(randomMsg);
                 }
                 scheduleNextBroadcast(); // Schedule next recursively
             }
