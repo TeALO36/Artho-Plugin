@@ -69,11 +69,19 @@ public class AuthListener implements Listener {
         boolean forceChange = authManager.isForceChange(player.getUniqueId());
 
         if (!loggedIn || forceChange) {
-            // Optimize: Only check if block position changed
+            // Seul le plan horizontal est fige : un joueur non connecte ne doit
+            // pas pouvoir se deplacer, mais bloquer aussi l'axe Y empeche la
+            // gravite de s'appliquer. Un joueur qui se deconnecte en l'air
+            // (chute, levitation, etc.) se reconnecte alors foule sur place
+            // en plein vide - le controle anti-vol natif du serveur le
+            // sanctionne pour "floating" en quelques secondes, avant meme
+            // qu'il ait pu taper /login : boucle de kick sans issue.
             if (event.getFrom().getBlockX() != event.getTo().getBlockX() ||
-                    event.getFrom().getBlockZ() != event.getTo().getBlockZ() ||
-                    event.getFrom().getBlockY() != event.getTo().getBlockY()) {
-                event.setTo(event.getFrom());
+                    event.getFrom().getBlockZ() != event.getTo().getBlockZ()) {
+                org.bukkit.Location to = event.getTo().clone();
+                to.setX(event.getFrom().getX());
+                to.setZ(event.getFrom().getZ());
+                event.setTo(to);
             }
         } else {
             // Ne retirer que l'aveuglement pose par l'auth elle-meme (duree
