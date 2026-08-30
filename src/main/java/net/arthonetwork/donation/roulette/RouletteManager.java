@@ -171,6 +171,41 @@ public class RouletteManager {
         return null;
     }
 
+    /**
+     * Runs the exact same draw logic as start() - drawOutcome() then a uniform
+     * index pick over the eligible pool - n times with no animation, no sound,
+     * no side effect. Exists purely to let an admin verify empirically that
+     * the live, deployed code is unbiased, instead of trusting a code review
+     * or a separate simulation that might not reflect what actually runs.
+     *
+     * @return null when there is nothing to draw over (disabled, empty table,
+     *         no eligible player); otherwise a two-line tally of outcomes and
+     *         victims
+     */
+    public String debugDraw(int n) {
+        if (!enabled) return null;
+        if (outcomes.isEmpty()) return null;
+        List<Player> pool = eligiblePlayers();
+        if (pool.isEmpty()) return null;
+
+        Map<String, Integer> byOutcome = new LinkedHashMap<>();
+        Map<String, Integer> byPlayer = new LinkedHashMap<>();
+        for (int i = 0; i < n; i++) {
+            RouletteOutcome o = drawOutcome();
+            Player v = pool.get(random.nextInt(pool.size()));
+            byOutcome.merge(o.getId(), 1, Integer::sum);
+            byPlayer.merge(v.getName(), 1, Integer::sum);
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append(n).append(" tirages (sort) : ");
+        byOutcome.forEach((k, v) -> sb.append(k).append("=").append(v).append(" (")
+                .append(Math.round(v * 100.0 / n)).append("%) "));
+        sb.append("\n").append(n).append(" tirages (joueur) : ");
+        byPlayer.forEach((k, v) -> sb.append(k).append("=").append(v).append(" (")
+                .append(Math.round(v * 100.0 / n)).append("%) "));
+        return sb.toString();
+    }
+
     // ------------------------------------------------------------ animation
 
     /** Cubic ease-out: a long fast blur, then a sharp, readable braking. */

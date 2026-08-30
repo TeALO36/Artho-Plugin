@@ -37,7 +37,7 @@ commands:
     usage: /linkaccount <bedrock|java> <Pseudo> <MotDePasse>
   roulette:
     description: Roulette du serveur (bonus ou malus tire au sort)
-    usage: /roulette [start|pay <option>|reload]
+    usage: /roulette [start|pay <option>|reload|debug <n>]
     permission: arthoplugin.roulette
   vanish:
     description: Se rendre invisible et simuler une deconnexion

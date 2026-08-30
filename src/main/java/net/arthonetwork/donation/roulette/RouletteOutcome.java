@@ -71,6 +71,11 @@ public class RouletteOutcome {
         if (sec == null) {
             return null;
         }
+        if (!sec.getBoolean("enabled", true)) {
+            // Desactivation deliberee : pas d'avertissement, contrairement a
+            // une entree reellement invalide plus bas dans cette methode.
+            return null;
+        }
         String label = sec.getString("label", id);
         int weight = Math.max(1, sec.getInt("weight", 1));
 

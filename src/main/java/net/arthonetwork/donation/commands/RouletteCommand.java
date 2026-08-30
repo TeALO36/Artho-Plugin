@@ -61,6 +61,14 @@ public class RouletteCommand implements CommandExecutor {
                         + " sort(s), achat " + (manager.isPurchaseEnabled() ? "actif" : "inactif") + ".");
                 return true;
 
+            case "debug":
+                if (!admin) {
+                    sender.sendMessage(ChatColor.RED + "Reserve aux operateurs.");
+                    return true;
+                }
+                handleDebug(sender, args);
+                return true;
+
             case "pay":
                 handlePay(sender, args);
                 return true;
@@ -68,6 +76,31 @@ public class RouletteCommand implements CommandExecutor {
             default:
                 showMenu(sender, admin);
                 return true;
+        }
+    }
+
+    /**
+     * Runs many draws instantly with no animation, purely to let an admin
+     * verify the live table's odds empirically - e.g. after a suspicious
+     * streak of the same outcome or the same player being designated.
+     */
+    private void handleDebug(CommandSender sender, String[] args) {
+        int n = 1000;
+        if (args.length >= 2) {
+            try {
+                n = Math.max(1, Math.min(1000000, Integer.parseInt(args[1])));
+            } catch (NumberFormatException e) {
+                sender.sendMessage(ChatColor.RED + "Nombre invalide.");
+                return;
+            }
+        }
+        String result = manager.debugDraw(n);
+        if (result == null) {
+            sender.sendMessage(ChatColor.RED + "Rien a tirer (module desactive, table vide ou aucun joueur eligible).");
+            return;
+        }
+        for (String line : result.split("\n")) {
+            sender.sendMessage(ChatColor.GRAY + line);
         }
     }
 
