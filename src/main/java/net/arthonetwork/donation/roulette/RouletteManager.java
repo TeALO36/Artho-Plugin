@@ -69,6 +69,11 @@ public class RouletteManager {
     public int getOutcomeCount() { return outcomes.size(); }
 
     public void load() {
+        // /roulette reload n'a de sens que si le fichier est relu depuis le
+        // disque : plugin.getConfig() renvoie sinon la copie en memoire deja
+        // chargee, et aucune modification du fichier n'etait jamais prise en
+        // compte tant qu'un /bukkit:reload complet ne survenait pas par ailleurs.
+        plugin.reloadConfig();
         ConfigurationSection root = plugin.getConfig().getConfigurationSection("features.roulette");
         outcomes.clear();
         purchaseOptions.clear();
