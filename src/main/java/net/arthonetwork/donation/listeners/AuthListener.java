@@ -76,8 +76,13 @@ public class AuthListener implements Listener {
                 event.setTo(event.getFrom());
             }
         } else {
-            // Remove blindness if logged in AND not force change
-            if (player.hasPotionEffect(PotionEffectType.BLINDNESS)) {
+            // Ne retirer que l'aveuglement pose par l'auth elle-meme (duree
+            // Integer.MAX_VALUE a la connexion), jamais un aveuglement
+            // applique par une autre fonctionnalite (ex: malus de roulette,
+            // duree de quelques secondes) : sinon ce dernier disparaissait
+            // au prochain PlayerMoveEvent, souvent en une fraction de seconde.
+            PotionEffect blindness = player.getPotionEffect(PotionEffectType.BLINDNESS);
+            if (blindness != null && blindness.getDuration() > 20 * 60 * 60) {
                 player.removePotionEffect(PotionEffectType.BLINDNESS);
             }
         }
