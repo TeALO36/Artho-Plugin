@@ -17,6 +17,8 @@ messages:
   - "&c[ArthoNetwork] &4Un petit geste pour le serveur ? &c$link"
   - "&9[ArthoNetwork] &3Participez à l'aventure en nous soutenant : &b$link"
   - "&5[ArthoNetwork] &dMerci de votre fidélité ! &5Dons : &d$link"
+  - "&c&lROULETTE &7» &fTente ta chance avec &e/roulette &f: bonus ou malus, &b5 diamants &fou &f3 stacks de fer !"
+  - "&c&lROULETTE &7» &fUn sort au hasard, un joueur au hasard. &e/roulette &fpour voir les prix."
   - "&eASTUCE &7» &fUtilisez &e/sethome <nom> &fpour sauvegarder un endroit !"
   - "&eASTUCE &7» &fTapez &e/homes &fpour voir vos points de téléportation."
   - "&eASTUCE &7» &fBesoin de rejoindre un ami ? Faites &e/tpa <joueur> &f!"
@@ -115,6 +117,118 @@ teleport:
 # Désactivé par défaut : tant que enabled=false, aucun écouteur n'est
 # enregistré et aucun raycast ne tourne (aucun coût, pas juste masqué).
 features:
+  # ==================== ROULETTE ====================
+  # Tire un sort au hasard dans la table ci-dessous, puis un joueur parmi les
+  # eligibles. Rien n'est code en dur : la table, les prix et les exclusions
+  # se modifient ici, puis /roulette reload.
+  roulette:
+    enabled: true
+
+    # Ces joueurs ne peuvent jamais etre designes (ils voient quand meme tout).
+    excluded-players:
+      - TeALO36
+    # Le mode creatif est exclu d'office : viser un joueur invulnerable n'a
+    # aucun interet et gache le tirage pour les autres.
+    exclude-creative: true
+
+    # Achat d'un tour par les joueurs. Le cout est preleve dans l'inventaire ;
+    # en cas d'echec du lancement, il est rembourse automatiquement.
+    purchase:
+      enabled: true
+      options:
+        diamants:
+          material: DIAMOND
+          amount: 5
+          label: "5 Diamants"
+        fer:
+          material: IRON_INGOT
+          amount: 192
+          label: "3 stacks de Fer"
+
+    # Vitesse du defilement, en ticks entre deux affichages. Le passage de
+    # min a max suit une courbe cubique : long flou rapide, puis freinage net.
+    animation:
+      outcome-steps: 46
+      player-steps: 42
+      min-delay-ticks: 1
+      max-delay-ticks: 13
+
+    tnt:
+      # Delai laisse au joueur pour s'eloigner de ses constructions. La TNT
+      # apparait sur lui a zero et explose dans la foulee : le lieu est
+      # evitable, l'explosion ne l'est pas.
+      countdown-seconds: 30
+
+    # kind : bonus | malus | tnt
+    # weight : poids relatif dans le tirage (2 = deux fois plus probable que 1)
+    # give : material + amount     effect : type + duration (s) + amplifier
+    outcomes:
+      netherite:
+        label: "1 Lingot de Netherite"
+        color: LIGHT_PURPLE
+        kind: bonus
+        weight: 1
+        give: { material: NETHERITE_INGOT, amount: 1 }
+      diamants:
+        label: "5 Diamants"
+        color: AQUA
+        kind: bonus
+        weight: 2
+        give: { material: DIAMOND, amount: 5 }
+      or:
+        label: "32 Lingots d'Or"
+        color: GOLD
+        kind: bonus
+        weight: 2
+        give: { material: GOLD_INGOT, amount: 32 }
+      fer:
+        label: "64 Lingots de Fer"
+        color: WHITE
+        kind: bonus
+        weight: 2
+        give: { material: IRON_INGOT, amount: 64 }
+      emeraudes:
+        label: "16 Emeraudes"
+        color: GREEN
+        kind: bonus
+        weight: 2
+        give: { material: EMERALD, amount: 16 }
+      poison:
+        label: "Poison 30s"
+        color: DARK_GREEN
+        kind: malus
+        weight: 2
+        effect: { type: POISON, duration: 30, amplifier: 0 }
+      aveuglement:
+        label: "Aveuglement 30s"
+        color: DARK_GRAY
+        kind: malus
+        weight: 2
+        effect: { type: BLINDNESS, duration: 30, amplifier: 0 }
+      nausee:
+        label: "Nausee 30s"
+        color: DARK_PURPLE
+        kind: malus
+        weight: 2
+        effect: { type: NAUSEA, duration: 30, amplifier: 0 }
+      lenteur:
+        label: "Lenteur 30s"
+        color: BLUE
+        kind: malus
+        weight: 2
+        effect: { type: SLOWNESS, duration: 30, amplifier: 2 }
+      faiblesse:
+        label: "Faiblesse 30s"
+        color: GRAY
+        kind: malus
+        weight: 2
+        effect: { type: WEAKNESS, duration: 30, amplifier: 1 }
+      tnt:
+        label: "T N T"
+        color: RED
+        kind: tnt
+        weight: 1
+
   linked-variants:
     enabled: false
     # Journalise en console chaque franchissement de palier et chaque repas,

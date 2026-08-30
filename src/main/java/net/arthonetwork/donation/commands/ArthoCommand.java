@@ -163,6 +163,8 @@ public class ArthoCommand implements CommandExecutor {
         sender.sendMessage(ChatColor.GOLD + "➤ Utilitaires:");
         sender.sendMessage(ChatColor.YELLOW + "  /ping " + ChatColor.WHITE + "- Voir sa latence.");
         sender.sendMessage(ChatColor.YELLOW + "  /lag " + ChatColor.WHITE + "- Voir les infos de lag.");
+        sender.sendMessage(ChatColor.YELLOW + "  /roulette " + ChatColor.WHITE
+                + "- Tenter la roulette : bonus ou malus tire au sort.");
 
         sender.sendMessage(ChatColor.GOLD + "\u27a4 T\u00e9l\u00e9portation:");
         sender.sendMessage(ChatColor.YELLOW + "  /tpa <joueur> " + ChatColor.WHITE + "- Demander \u00e0 se t\u00e9l\u00e9porter.");
@@ -188,6 +190,12 @@ public class ArthoCommand implements CommandExecutor {
             if (sender.hasPermission("arthoplugin.vanish")) {
                 sender.sendMessage(ChatColor.RED + "  /vanish " + ChatColor.WHITE
                         + "- Se rendre invisible (simule une déconnexion).");
+            }
+            if (sender.hasPermission("arthoplugin.roulette.admin")) {
+                sender.sendMessage(ChatColor.RED + "  /roulette start " + ChatColor.WHITE
+                        + "- Lancer la roulette gratuitement.");
+                sender.sendMessage(ChatColor.RED + "  /roulette reload " + ChatColor.WHITE
+                        + "- Recharger la table de la roulette.");
             }
         }
 

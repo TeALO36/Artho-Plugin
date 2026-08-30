@@ -53,6 +53,7 @@ public class ArthoPlugin extends JavaPlugin {
 
     private List<String> messages;
     private String donationLink;
+    private net.arthonetwork.donation.roulette.RouletteManager rouletteManager;
     private int minInterval;
     private int maxInterval;
     private BukkitRunnable task;
@@ -120,6 +121,10 @@ public class ArthoPlugin extends JavaPlugin {
                 new net.arthonetwork.donation.commands.VanishCommand(this);
         getCommand("vanish").setExecutor(vanishCmd);
         getServer().getPluginManager().registerEvents(vanishCmd, this);
+
+        rouletteManager = new net.arthonetwork.donation.roulette.RouletteManager(this);
+        getCommand("roulette").setExecutor(
+                new net.arthonetwork.donation.commands.RouletteCommand(rouletteManager));
         linkedVariantsFeature.init(); // no-op unless features.linked-variants.enabled is true
 
         // Teleportation commands
