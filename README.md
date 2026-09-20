@@ -31,6 +31,10 @@ auth:
 2. Glissez le fichier `.jar` dans le dossier `plugins` de votre serveur.
 3. Redémarrez votre serveur.
 
+## Comptes liés Bedrock ↔ Java
+
+`/linkaccount` fusionne un compte Bedrock et un compte Java en un seul personnage (mêmes homes, même inventaire, même progression), avec connexion automatique côté Bedrock. Voir [`COMPTES-LIES.md`](COMPTES-LIES.md) : utilisation, installation de la base de liaison Floodgate, et pièges.
+
 ## Module "Variantes Liées" (Linked Variants)
 
 > 📖 **[Guide de configuration complet de A à Z → VARIANTES.md](VARIANTES.md)**

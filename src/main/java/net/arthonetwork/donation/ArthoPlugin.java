@@ -11,6 +11,7 @@ import net.arthonetwork.donation.commands.TpaCommand;
 import net.arthonetwork.donation.commands.VariantCommand;
 import net.arthonetwork.donation.listeners.AuthListener;
 import net.arthonetwork.donation.listeners.BedrockAutoLoginListener;
+import net.arthonetwork.donation.listeners.LinkCommandRouter;
 import net.arthonetwork.donation.listeners.DeathListener;
 import net.arthonetwork.donation.listeners.SpeedFlyListener;
 import net.arthonetwork.donation.listeners.PlayerJoinListener;
@@ -19,8 +20,10 @@ import net.arthonetwork.donation.listeners.AntiXrayListener;
 import net.arthonetwork.donation.tasks.OpCheckTask;
 import net.arthonetwork.donation.tasks.AuthReminderTask;
 import net.arthonetwork.donation.tasks.TabListUpdateTask;
+import net.arthonetwork.donation.utils.AccountLinkService;
 import net.arthonetwork.donation.utils.ArthoTabCompleter;
 import net.arthonetwork.donation.utils.AuthManager;
+import net.arthonetwork.donation.utils.FloodgateLinkBridge;
 import net.arthonetwork.donation.utils.HomeManager;
 import net.arthonetwork.donation.utils.LinkManager;
 import net.arthonetwork.donation.utils.SuggestionManager;
@@ -60,6 +63,8 @@ public class ArthoPlugin extends JavaPlugin {
     private SuggestionManager suggestionManager;
     private AuthManager authManager;
     private LinkManager linkManager;
+    private FloodgateLinkBridge linkBridge;
+    private AccountLinkService linkService;
     private TeleportManager teleportManager;
     private HomeManager homeManager;
     private AntiXrayListener antiXrayListener;
@@ -81,6 +86,8 @@ public class ArthoPlugin extends JavaPlugin {
         linkManager = new LinkManager(this);
         teleportManager = new TeleportManager(this);
         homeManager = new HomeManager(this, teleportManager);
+        linkBridge = new FloodgateLinkBridge(this);
+        linkService = new AccountLinkService(this, linkManager, linkBridge, homeManager);
         antiXrayListener = new AntiXrayListener(this);
 
         // Register Console Filter
@@ -112,7 +119,9 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("auth").setExecutor(authCmd);
         getCommand("changepassword").setExecutor(authCmd);
 
-        getCommand("linkaccount").setExecutor(new LinkAccountCommand(this, authManager, linkManager));
+        LinkAccountCommand linkCmd = new LinkAccountCommand(this, authManager, linkManager, linkService, linkBridge);
+        getCommand("linkaccount").setExecutor(linkCmd);
+        getCommand("unlinkaccount").setExecutor(linkCmd);
 
         linkedVariantsFeature = new LinkedVariantsFeature(this);
         getCommand("variant").setExecutor(new VariantCommand(linkedVariantsFeature));
@@ -152,7 +161,14 @@ public class ArthoPlugin extends JavaPlugin {
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
         getServer().getPluginManager().registerEvents(new AuthListener(this, authManager), this);
-        getServer().getPluginManager().registerEvents(new BedrockAutoLoginListener(this, authManager, linkManager), this);
+        getServer().getPluginManager().registerEvents(
+                new BedrockAutoLoginListener(this, authManager, linkManager, linkBridge), this);
+        // After AuthListener: it must have the chance to stop a player who is not logged in first.
+        getServer().getPluginManager().registerEvents(new LinkCommandRouter(this), this);
+
+        // Floodgate finishes loading its link database around our own startup: replay the
+        // recorded links into it a moment later rather than racing it.
+        getServer().getScheduler().runTaskLater(this, linkService::reconcile, 100L);
         getServer().getPluginManager().registerEvents(new SpeedFlyListener(this, authManager), this);
         getServer().getPluginManager().registerEvents(new TeleportListener(teleportManager), this);
         getServer().getPluginManager().registerEvents(antiXrayListener, this);
@@ -205,6 +221,12 @@ public class ArthoPlugin extends JavaPlugin {
                 getLogger().warning("Unable to unregister ConsoleFilter: " + e.getMessage());
             }
         }
+
+        // Data files are written by background workers: make sure the last changes are on disk.
+        if (suggestionManager != null) suggestionManager.flush();
+        if (authManager != null) authManager.flush();
+        if (linkManager != null) linkManager.flush();
+        if (homeManager != null) homeManager.flush();
 
         getLogger().info("Artho-Plugin disabled!");
     }
@@ -392,6 +414,14 @@ public class ArthoPlugin extends JavaPlugin {
     public String getWhitelistMessage() {
         return ChatColor.translateAlternateColorCodes('&',
                 getConfig().getString("auth.whitelist.kick-message", "&cNot whitelisted"));
+    }
+
+    public LinkManager getLinkManager() {
+        return linkManager;
+    }
+
+    public FloodgateLinkBridge getLinkBridge() {
+        return linkBridge;
     }
 
     public SuggestionManager getSuggestionManager() {

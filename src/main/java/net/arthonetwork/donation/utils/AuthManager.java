@@ -9,13 +9,15 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class AuthManager {
 
     private final ArthoPlugin plugin;
-    private File userdataFile;
-    private FileConfiguration userdataConfig;
-    private final Set<UUID> loggedInPlayers = new HashSet<>();
+    private YamlStore store;
+    private YamlConfiguration userdataConfig;
+    // Read from AsyncPlayerChatEvent as well as from the main thread.
+    private final Set<UUID> loggedInPlayers = ConcurrentHashMap.newKeySet();
     private final Map<String, Integer> ipAttempts = new HashMap<>();
     private final Map<String, Long> ipTimeouts = new HashMap<>();
     // Escalation tracking (in-memory, resets on restart): counts how many times
@@ -30,16 +32,8 @@ public class AuthManager {
     }
 
     private void initFile() {
-        userdataFile = new File(plugin.getDataFolder(), "userdata.yml");
-        if (!userdataFile.exists()) {
-            try {
-                userdataFile.createNewFile();
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not create userdata.yml!");
-                e.printStackTrace();
-            }
-        }
-        userdataConfig = YamlConfiguration.loadConfiguration(userdataFile);
+        store = new YamlStore(new File(plugin.getDataFolder(), "userdata.yml"), plugin.getLogger());
+        userdataConfig = store.load();
         bannedIps.addAll(userdataConfig.getStringList("security.banned-ips"));
     }
 
@@ -110,20 +104,12 @@ public class AuthManager {
     }
 
     private void saveUserdata() {
-        // Async save to prevent lag
-        final org.bukkit.configuration.file.YamlConfiguration configCopy = YamlConfiguration
-                .loadConfiguration(userdataFile);
-        for (String key : userdataConfig.getKeys(true)) {
-            configCopy.set(key, userdataConfig.get(key));
-        }
-        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            try {
-                configCopy.save(userdataFile);
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not save userdata.yml!");
-                e.printStackTrace();
-            }
-        });
+        store.save(userdataConfig);
+    }
+
+    /** Waits for pending writes; call from onDisable(). */
+    public void flush() {
+        store.flush();
     }
 
     public boolean isIpBlocked(String ip) {

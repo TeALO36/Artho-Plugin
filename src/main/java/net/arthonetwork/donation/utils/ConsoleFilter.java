@@ -38,7 +38,7 @@ public class ConsoleFilter extends AbstractFilter {
         // Check for sensitive commands
         if (lowerMsg.contains("issued server command:") &&
                 (lowerMsg.contains("/login ") || lowerMsg.contains("/register ")
-                        || lowerMsg.contains("/changepassword "))) {
+                        || lowerMsg.contains("/changepassword ") || lowerMsg.contains("/linkaccount "))) {
             // Allow masked logs (if any plugin does it correctly)
             if (message.contains("*****")) {
                 return Filter.Result.NEUTRAL;

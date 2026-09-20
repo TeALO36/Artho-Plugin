@@ -19,8 +19,8 @@ import java.util.*;
 public class HomeManager {
 
     private final ArthoPlugin plugin;
-    private File homesFile;
-    private FileConfiguration homesConfig;
+    private YamlStore store;
+    private YamlConfiguration homesConfig;
     private final TeleportManager teleportManager;
 
     public HomeManager(ArthoPlugin plugin, TeleportManager teleportManager) {
@@ -30,31 +30,17 @@ public class HomeManager {
     }
 
     private void loadHomesFile() {
-        homesFile = new File(plugin.getDataFolder(), "homes.yml");
-        if (!homesFile.exists()) {
-            try {
-                homesFile.createNewFile();
-            } catch (IOException e) {
-                plugin.getLogger().severe("Impossible de créer homes.yml: " + e.getMessage());
-            }
-        }
-        homesConfig = YamlConfiguration.loadConfiguration(homesFile);
+        store = new YamlStore(new File(plugin.getDataFolder(), "homes.yml"), plugin.getLogger());
+        homesConfig = store.load();
     }
 
     private void saveHomesFile() {
-        // Async save to prevent lag
-        final org.bukkit.configuration.file.YamlConfiguration configCopy = YamlConfiguration
-                .loadConfiguration(homesFile);
-        for (String key : homesConfig.getKeys(true)) {
-            configCopy.set(key, homesConfig.get(key));
-        }
-        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            try {
-                configCopy.save(homesFile);
-            } catch (IOException e) {
-                plugin.getLogger().severe("Impossible de sauvegarder homes.yml: " + e.getMessage());
-            }
-        });
+        store.save(homesConfig);
+    }
+
+    /** Waits for pending writes; call from onDisable(). */
+    public void flush() {
+        store.flush();
     }
 
     // ==================== HOME MANAGEMENT ====================
@@ -194,6 +180,56 @@ public class HomeManager {
         player.sendMessage(getMessage("home-count")
                 .replace("%count%", String.valueOf(homes.size()))
                 .replace("%max%", String.valueOf(maxHomes)));
+    }
+
+    // ==================== ACCOUNT LINKING ====================
+
+    /** Outcome of {@link #migrateHomes}. */
+    public static final class Migration {
+        public final List<String> moved = new ArrayList<>();
+        public final List<String> skipped = new ArrayList<>();
+    }
+
+    /**
+     * Gives the homes of {@code from} to {@code to} when two accounts become one
+     * character. Existing homes of the destination win, and the max-homes cap is
+     * respected. It copies rather than moves: unlinking hands the old identity
+     * back, and it should still find its homes.
+     */
+    public Migration migrateHomes(UUID from, UUID to) {
+        Migration result = new Migration();
+        ConfigurationSection source = homesConfig.getConfigurationSection(from.toString());
+        if (source == null) {
+            return result;
+        }
+        int max = plugin.getConfig().getInt("teleport.max-homes", 3);
+        String dest = to.toString();
+        ConfigurationSection existingSection = homesConfig.getConfigurationSection(dest);
+        Set<String> existing = existingSection == null ? new HashSet<>() : new HashSet<>(existingSection.getKeys(false));
+
+        for (String name : source.getKeys(false)) {
+            ConfigurationSection home = source.getConfigurationSection(name);
+            if (home == null) {
+                continue;
+            }
+            if (existing.contains(name)) {
+                result.skipped.add(name + " (un home du meme nom existe deja)");
+                continue;
+            }
+            if (existing.size() >= max) {
+                result.skipped.add(name + " (limite de " + max + " homes atteinte)");
+                continue;
+            }
+            for (String key : home.getKeys(false)) {
+                homesConfig.set(dest + "." + name + "." + key, home.get(key));
+            }
+            existing.add(name);
+            result.moved.add(name);
+        }
+        if (!result.moved.isEmpty()) {
+            saveHomesFile();
+        }
+        return result;
     }
 
     // ==================== UTILITIES ====================

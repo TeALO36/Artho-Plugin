@@ -117,8 +117,11 @@ public class AuthListener implements Listener {
         String[] args = message.split(" ");
         String command = args[0].toLowerCase();
 
-        // Handle console logging security
-        if (command.equals("/login") || command.equals("/register") || command.equals("/changepassword")) {
+        // Handle console logging security. /linkaccount belongs here too: its arguments
+        // include a password, and it must work before login since it proves ownership of
+        // the destination account itself - a fresh Bedrock player has no password of their own yet.
+        if (command.equals("/login") || command.equals("/register") || command.equals("/changepassword")
+                || command.equals("/linkaccount")) {
             event.setCancelled(true);
             plugin.getLogger().info(event.getPlayer().getName() + " issued server command: " + command + " *****");
 

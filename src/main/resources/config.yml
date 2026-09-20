@@ -117,6 +117,22 @@ teleport:
 # Désactivé par défaut : tant que enabled=false, aucun écouteur n'est
 # enregistré et aucun raycast ne tourne (aucun coût, pas juste masqué).
 features:
+  # ==================== COMPTES LIES ====================
+  # /linkaccount fusionne un compte Bedrock et un compte Java en UN personnage :
+  # une fois lie, le compte Bedrock se connecte AVEC l'UUID et le pseudo du compte
+  # Java (via la base de liaison de Floodgate). Homes, inventaire, coffre de l'Ender,
+  # XP, succes et position sont donc ceux du compte Java : rien a synchroniser.
+  account-link:
+    # Transmettre au compte Java les homes que le compte Bedrock avait deja
+    # (copie, pas deplacement : si on delie, l'ancien personnage les retrouve).
+    migrate-homes: true
+    # Copier les fichiers de l'ancien personnage Bedrock (inventaire, succes,
+    # stats) dans plugins/Artho-Plugin/link-backups/ avant qu'il soit remplace.
+    backup-on-link: true
+    # Secondes laissees au joueur pour lire le resultat avant d'etre reconnecte
+    # (necessaire : l'identite ne change qu'a la connexion suivante).
+    reconnect-delay: 4
+
   # ==================== ROULETTE ====================
   # Tire un sort au hasard dans la table ci-dessous, puis un joueur parmi les
   # eligibles. Rien n'est code en dur : la table, les prix et les exclusions

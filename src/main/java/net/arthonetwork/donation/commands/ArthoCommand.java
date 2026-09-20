@@ -14,6 +14,40 @@ public class ArthoCommand implements CommandExecutor {
         this.plugin = plugin;
     }
 
+    /**
+     * /artho link list | unlink <pseudo>. It lives under /artho because Floodgate registers
+     * its own /linkaccount and /unlinkaccount, which the console cannot use and which win
+     * over ours in the dispatcher; /artho has no such rival.
+     */
+    private void handleLink(CommandSender sender, String[] args) {
+        if (args.length >= 3 && args[1].equalsIgnoreCase("unlink")) {
+            // Same code path as /unlinkaccount <pseudo>, dispatched by hand for the same reason.
+            plugin.getCommand("unlinkaccount").execute(sender, "unlinkaccount", new String[] { args[2] });
+            return;
+        }
+        if (args.length >= 2 && args[1].equalsIgnoreCase("list")) {
+            if (!plugin.getLinkBridge().isReady()) {
+                sender.sendMessage(ChatColor.RED + "Floodgate ou sa base de liaison ne sont pas chargés.");
+                return;
+            }
+            java.util.List<net.arthonetwork.donation.utils.LinkManager.Entry> entries = plugin.getLinkManager().entries();
+            sender.sendMessage(ChatColor.GOLD + "Comptes liés (" + entries.size() + ") :");
+            for (net.arthonetwork.donation.utils.LinkManager.Entry entry : entries) {
+                String bedrock = entry.bedrockName.startsWith(".") ? entry.bedrockName.substring(1) : entry.bedrockName;
+                String base = ChatColor.YELLOW + "  " + entry.javaUsername + ChatColor.GRAY + " <-> " + ChatColor.WHITE
+                        + bedrock + ChatColor.GRAY + " (Bedrock)";
+                // The plugin's record and Floodgate's database must agree: say so when they do not.
+                plugin.getLinkBridge().isLinked(entry.bedrockUuid).whenComplete((known, error) ->
+                        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> sender.sendMessage(base
+                                + (error != null ? ChatColor.RED + "  ? etat Floodgate inconnu"
+                                        : known ? ChatColor.GREEN + "  OK Floodgate"
+                                                : ChatColor.RED + "  ABSENT de Floodgate (rétabli à la prochaine connexion)"))));
+            }
+            return;
+        }
+        sender.sendMessage(ChatColor.RED + "Usage: /artho link <list | unlink <pseudo>>");
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 0) {
@@ -33,6 +67,15 @@ public class ArthoCommand implements CommandExecutor {
                     return true;
                 }
                 sender.sendMessage(ChatColor.RED + "Usage: /artho update [auto | rollback <version>]");
+                return true;
+            }
+
+            if (sub.equals("link")) {
+                if (!sender.hasPermission("arthoplugin.admin")) {
+                    sender.sendMessage(ChatColor.RED + "Permission refusée.");
+                    return true;
+                }
+                handleLink(sender, args);
                 return true;
             }
 
@@ -142,9 +185,15 @@ public class ArthoCommand implements CommandExecutor {
         sender.sendMessage(
                 ChatColor.YELLOW + "  /changepassword <new> <confirm> " + ChatColor.WHITE + "- Changer mdp.");
         sender.sendMessage(ChatColor.YELLOW + "  /linkaccount <bedrock|java> <pseudo> <mdp> " + ChatColor.WHITE
-                + "- Lier son compte à l'autre plateforme.");
+                + "- Fusionner ses comptes Bedrock et Java (un seul personnage).");
+        sender.sendMessage(ChatColor.YELLOW + "  /linkaccount status " + ChatColor.WHITE + "- Voir l'état de sa liaison.");
+        sender.sendMessage(ChatColor.YELLOW + "  /unlinkaccount " + ChatColor.WHITE + "- Séparer ses comptes.");
         if (sender.hasPermission("arthoplugin.admin")) {
             sender.sendMessage(ChatColor.RED + "  /auth reset <joueur> " + ChatColor.WHITE + "- Reset mdp joueur.");
+            sender.sendMessage(ChatColor.RED + "  /unlinkaccount <pseudo> " + ChatColor.WHITE
+                    + "- Délier les comptes d'un joueur.");
+            sender.sendMessage(ChatColor.RED + "  /artho link <list|unlink <pseudo>> " + ChatColor.WHITE
+                    + "- Voir/délier les comptes liés (utilisable depuis la console).");
             sender.sendMessage(ChatColor.RED + "  /auth whitelist <add|remove|list|on|off> " + ChatColor.WHITE
                     + "- Gérer whitelist.");
             sender.sendMessage(ChatColor.RED + "  /auth set <max-attempts|timeout> <valeur> " + ChatColor.WHITE

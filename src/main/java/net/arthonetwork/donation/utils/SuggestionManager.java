@@ -15,8 +15,8 @@ import java.util.*;
 public class SuggestionManager {
 
     private final ArthoPlugin plugin;
-    private File suggestionsFile;
-    private FileConfiguration suggestionsConfig;
+    private YamlStore store;
+    private YamlConfiguration suggestionsConfig;
     private File historyFile;
 
     public SuggestionManager(ArthoPlugin plugin) {
@@ -25,16 +25,8 @@ public class SuggestionManager {
     }
 
     private void initFiles() {
-        suggestionsFile = new File(plugin.getDataFolder(), "suggestions.yml");
-        if (!suggestionsFile.exists()) {
-            try {
-                suggestionsFile.createNewFile();
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not create suggestions.yml!");
-                e.printStackTrace();
-            }
-        }
-        suggestionsConfig = YamlConfiguration.loadConfiguration(suggestionsFile);
+        store = new YamlStore(new File(plugin.getDataFolder(), "suggestions.yml"), plugin.getLogger());
+        suggestionsConfig = store.load();
 
         historyFile = new File(plugin.getDataFolder(), "suggestions_history.txt");
         if (!historyFile.exists()) {
@@ -48,7 +40,12 @@ public class SuggestionManager {
     }
 
     public void reload() {
-        suggestionsConfig = YamlConfiguration.loadConfiguration(suggestionsFile);
+        suggestionsConfig = store.load();
+    }
+
+    /** Waits for pending writes; call from onDisable(). */
+    public void flush() {
+        store.flush();
     }
 
     public void addSuggestion(String playerName, String content) {
@@ -104,20 +101,7 @@ public class SuggestionManager {
     }
 
     private void saveSuggestions() {
-        // Async save to prevent lag
-        final org.bukkit.configuration.file.YamlConfiguration configCopy = YamlConfiguration
-                .loadConfiguration(suggestionsFile);
-        for (String key : suggestionsConfig.getKeys(true)) {
-            configCopy.set(key, suggestionsConfig.get(key));
-        }
-        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            try {
-                configCopy.save(suggestionsFile);
-            } catch (IOException e) {
-                plugin.getLogger().severe("Could not save suggestions.yml!");
-                e.printStackTrace();
-            }
-        });
+        store.save(suggestionsConfig);
     }
 
     private void logHistory(String line) {
