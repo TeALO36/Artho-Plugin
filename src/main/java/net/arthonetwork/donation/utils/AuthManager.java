@@ -6,8 +6,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -46,8 +44,7 @@ public class AuthManager {
     }
 
     public void register(UUID uuid, String password, String ip) {
-        String hash = hashPassword(password);
-        userdataConfig.set(uuid.toString() + ".password", hash);
+        userdataConfig.set(uuid.toString() + ".password", PasswordHasher.hash(password));
         userdataConfig.set(uuid.toString() + ".ip", ip);
         saveUserdata();
         login(uuid);
@@ -65,10 +62,32 @@ public class AuthManager {
      * Verifies a password against the stored hash without mutating any
      * login state. Used by /linkaccount to check a Java account's password
      * on behalf of a Bedrock player without logging the Java UUID in.
+     *
+     * <p>A hash in the old format (bare SHA-256) is accepted and replaced by a
+     * current one here, since this is the only moment the plaintext is in hand:
+     * nobody has to change their password for the upgrade to happen.
      */
     public boolean checkPassword(UUID uuid, String password) {
-        String storedHash = userdataConfig.getString(uuid.toString() + ".password");
-        return storedHash != null && storedHash.equals(hashPassword(password));
+        String key = uuid.toString() + ".password";
+        String stored = userdataConfig.getString(key);
+        if (stored == null || !PasswordHasher.verify(password, stored)) {
+            return false;
+        }
+        if (PasswordHasher.needsUpgrade(stored)) {
+            upgradeHash(key, password);
+        }
+        return true;
+    }
+
+    /** Only keeps the new hash if it verifies: a bug here must never be able to lock an account out. */
+    private void upgradeHash(String key, String password) {
+        String upgraded = PasswordHasher.hash(password);
+        if (!PasswordHasher.verify(password, upgraded)) {
+            plugin.getLogger().warning("[Auth] Mise a jour d'un hachage abandonnee : le nouveau hachage ne se verifie pas.");
+            return;
+        }
+        userdataConfig.set(key, upgraded);
+        saveUserdata();
     }
 
     public void login(UUID uuid) {
@@ -83,24 +102,6 @@ public class AuthManager {
         userdataConfig.set(uuid.toString(), null);
         saveUserdata();
         logout(uuid);
-    }
-
-    private String hashPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
-                if (hex.length() == 1)
-                    hexString.append('0');
-                hexString.append(hex);
-            }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null;
-        }
     }
 
     private void saveUserdata() {
@@ -274,8 +275,7 @@ public class AuthManager {
     }
 
     public void changePassword(UUID uuid, String newPassword) {
-        String hash = hashPassword(newPassword);
-        userdataConfig.set(uuid.toString() + ".password", hash);
+        userdataConfig.set(uuid.toString() + ".password", PasswordHasher.hash(newPassword));
         setForceChange(uuid, false);
         saveUserdata();
     }

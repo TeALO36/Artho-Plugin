@@ -35,6 +35,14 @@ auth:
 
 `/linkaccount` fusionne un compte Bedrock et un compte Java en un seul personnage (mêmes homes, même inventaire, même progression), avec connexion automatique côté Bedrock. Voir [`COMPTES-LIES.md`](COMPTES-LIES.md) : utilisation, installation de la base de liaison Floodgate, et pièges.
 
+## Mots de passe
+
+Ils sont stockés avec PBKDF2-HMAC-SHA256 : sel aléatoire par mot de passe, 300 000 itérations (`PasswordHasher`), le coût étant inscrit dans chaque hachage pour pouvoir le relever plus tard. Avant la 0.18.1 c'était un SHA-256 nu, sans sel : identique pour deux mots de passe identiques, donc retrouvable en quelques secondes si `userdata.yml` fuitait.
+
+Les anciens hachages restent acceptés et sont **remplacés automatiquement à la prochaine connexion réussie** : personne n'a rien à changer.
+
+> **Ne revenez pas à une version < 0.18.1 (`/artho update rollback`) une fois que des comptes ont migré.** L'ancienne version ne sait pas lire le nouveau format et refuserait ces joueurs ; `/auth reset <joueur>` les débloque. La commande avertit dans ce cas.
+
 ## Module "Variantes Liées" (Linked Variants)
 
 > 📖 **[Guide de configuration complet de A à Z → VARIANTES.md](VARIANTES.md)**

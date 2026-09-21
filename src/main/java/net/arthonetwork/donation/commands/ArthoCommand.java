@@ -14,6 +14,23 @@ public class ArthoCommand implements CommandExecutor {
         this.plugin = plugin;
     }
 
+    /** True when {@code version} (e.g. "v0.17.4") is older than major.minor.patch; unparsable counts as not older. */
+    private static boolean isBefore(String version, int major, int minor, int patch) {
+        try {
+            String[] p = version.replace("v", "").split("\\.");
+            int[] have = { Integer.parseInt(p[0]), Integer.parseInt(p[1]), p.length > 2 ? Integer.parseInt(p[2]) : 0 };
+            int[] ref = { major, minor, patch };
+            for (int i = 0; i < 3; i++) {
+                if (have[i] != ref[i]) {
+                    return have[i] < ref[i];
+                }
+            }
+            return false;
+        } catch (RuntimeException unparsable) {
+            return false;
+        }
+    }
+
     /**
      * /artho link list | unlink <pseudo>. It lives under /artho because Floodgate registers
      * its own /linkaccount and /unlinkaccount, which the console cannot use and which win
@@ -63,6 +80,11 @@ public class ArthoCommand implements CommandExecutor {
                     return true;
                 }
                 if (args.length == 3 && args[1].equalsIgnoreCase("rollback")) {
+                    if (isBefore(args[2], 0, 18, 1)) {
+                        sender.sendMessage(ChatColor.YELLOW + "Attention : avant la 0.18.1, les mots de passe étaient lus "
+                                + "dans un ancien format. Les comptes déjà migrés ne pourraient plus se connecter "
+                                + "(/auth reset <joueur> les débloque).");
+                    }
                     new net.arthonetwork.donation.utils.AutoUpdater(plugin).downloadVersion(args[2], sender);
                     return true;
                 }
