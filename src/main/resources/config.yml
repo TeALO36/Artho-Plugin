@@ -30,19 +30,29 @@ update:
 
 
 auth:
+  # ==================== CODES D INVITATION ====================
+  # Incident du 22/09/2026 : en mode crack, n importe qui peut taper le pseudo
+  # d un joueur existant et CREER un compte dessus (/register libre) - c est
+  # ainsi que bananee a imite banane. Un compte ne se cree desormais qu avec un
+  # code distribue par un admin : /auth invite generate|add|remove|list.
+  invite-codes:
+    # false seulement si tu assumes une registration ouverte a tous (deconseille).
+    enabled: true
   whitelist:
     kick-message: "&cVous n'êtes pas sur la whitelist !"
   messages:
     not-registered: "&c⚠ Vous devez vous enregistrer !"
     not-logged-in: "&c⚠ Vous devez vous connecter !"
     login-instruction: "&e/login <motdepasse>"
-    register-instruction: "&e/register <motdepasse> <confirmation>"
+    register-instruction: "&e/register <code invitation> <motdepasse> <confirmation>"
     title: "&cAuthentification Requise"
     subtitle-login: "&e/login <mot de passe>"
     subtitle-register: "&e/register <mdp> <confirmation>"
     success-login: "&aVous êtes connecté !"
     success-register: "&aInscription réussie ! Vous êtes connecté."
     wrong-password: "&cMot de passe incorrect !"
+    invalid-invite-code: "&cCode d'invitation invalide ou epuise. Demande-en un a un admin."
+    password-too-short: "&cMot de passe trop court : 6 caracteres minimum."
     already-logged-in: "&cVous êtes déjà connecté."
     passwords-do-not-match: "&cLes mots de passe ne correspondent pas."
     already-registered: "&cVous êtes déjà enregistré ! Utilisez /login."

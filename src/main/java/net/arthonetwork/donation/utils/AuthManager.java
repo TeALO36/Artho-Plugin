@@ -23,6 +23,13 @@ public class AuthManager {
     private final Map<String, Integer> ipBlockCount = new HashMap<>();
     // Permanent bans (persisted to userdata.yml, survive restarts).
     private final Set<String> bannedIps = new HashSet<>();
+    // Permanent ACCOUNT bans (persisted, survive restarts) : an intruder who
+    // lost an IP (VPN hop) must not get back in with the same stolen identity.
+    private final Set<String> bannedUuids = new HashSet<>();
+    // Last IP seen per account, for the login-from-new-IP alert (ops tripwire).
+    private final Map<String, String> lastIpByUuid = new HashMap<>();
+    // Comptes encore en SHA-256 nu sans sel : remplis au demarrage par l audit.
+    private java.util.Set<String> legacyHashAccounts = null;
 
     public AuthManager(ArthoPlugin plugin) {
         this.plugin = plugin;
@@ -33,6 +40,13 @@ public class AuthManager {
         store = new YamlStore(new File(plugin.getDataFolder(), "userdata.yml"), plugin.getLogger());
         userdataConfig = store.load();
         bannedIps.addAll(userdataConfig.getStringList("security.banned-ips"));
+        bannedUuids.addAll(userdataConfig.getStringList("security.banned-uuids"));
+        for (String key : userdataConfig.getKeys(false)) {
+            String ip = userdataConfig.getString(key + ".ip");
+            if (ip != null) {
+                lastIpByUuid.put(key.toLowerCase(), ip);
+            }
+        }
     }
 
     public boolean isRegistered(UUID uuid) {
@@ -50,12 +64,44 @@ public class AuthManager {
         login(uuid);
     }
 
-    public boolean login(UUID uuid, String password) {
+    public boolean login(UUID uuid, String password, String ip) {
         if (checkPassword(uuid, password)) {
+            // Le hachage doit partir en PBKDF2 des que le mot de passe est en
+            // main : en laissant la migration au hasard d un futur login, les
+            // comptes inactifs restaient cassables indefiniment (SHA-256 nu).
+            String key = uuid.toString() + ".password";
+            String stored = userdataConfig.getString(key);
+            if (PasswordHasher.needsUpgrade(stored)) {
+                upgradeHash(key, password);
+                plugin.getLogger().info("[Auth] Hachage PBKDF2 pose pour " + uuid + " (migration au login).");
+            }
+            if (ip != null) {
+                alertOnNewIp(uuid, ip);
+                userdataConfig.set(uuid.toString() + ".ip", ip);
+                saveUserdata();
+            }
             login(uuid);
             return true;
         }
         return false;
+    }
+
+    /** Previens les ops en ligne quand un compte se connecte d une nouvelle IP (usurpation possible). */
+    private void alertOnNewIp(UUID uuid, String ip) {
+        String previous = lastIpByUuid.get(uuid.toString().toLowerCase());
+        lastIpByUuid.put(uuid.toString().toLowerCase(), ip);
+        if (previous == null || previous.equals(ip)) {
+            return;
+        }
+        String name = org.bukkit.Bukkit.getOfflinePlayer(uuid).getName();
+        String msg = "[Auth] " + name + " se connecte depuis une nouvelle IP : " + ip
+                + " (precedente : " + previous + "). Si ce n est pas lui : /auth unregister " + name;
+        plugin.getLogger().warning(msg);
+        for (org.bukkit.entity.Player op : org.bukkit.Bukkit.getOnlinePlayers()) {
+            if (op.isOp() || op.hasPermission("arthoplugin.admin")) {
+                op.sendMessage(org.bukkit.ChatColor.YELLOW + msg);
+            }
+        }
     }
 
     /**
@@ -180,6 +226,87 @@ public class AuthManager {
 
     public List<String> getBannedIps() {
         return new ArrayList<>(bannedIps);
+    }
+
+    // Permanent ACCOUNT bans (plugin side)
+
+    public boolean isUuidBanned(UUID uuid) {
+        return bannedUuids.contains(uuid.toString().toLowerCase());
+    }
+
+    public boolean banUuid(UUID uuid, String name) {
+        String id = uuid.toString().toLowerCase();
+        if (!bannedUuids.add(id)) {
+            return false;
+        }
+        List<String> list = userdataConfig.getStringList("security.banned-uuids");
+        list.add(id);
+        userdataConfig.set("security.banned-uuids", list);
+        if (name != null) {
+            userdataConfig.set("security.banned-names." + id, name);
+        }
+        saveUserdata();
+        plugin.getLogger().warning("[Sécurité] Compte BANNI (plugin) : " + name + " (" + id + "). Débloquer avec /auth security unban-uuid " + id);
+        return true;
+    }
+
+    public boolean unbanUuid(String uuidOrName) {
+        String id = normalizeUuid(uuidOrName);
+        if (id == null) {
+            return false;
+        }
+        if (!bannedUuids.remove(id)) {
+            return false;
+        }
+        List<String> list = userdataConfig.getStringList("security.banned-uuids");
+        list.remove(id);
+        userdataConfig.set("security.banned-uuids", list);
+        saveUserdata();
+        return true;
+    }
+
+    public List<String> getBannedUuids() {
+        return new ArrayList<>(bannedUuids);
+    }
+
+    private String normalizeUuid(String input) {
+        // Accepte un UUID complet ou un pseudo connu (bananee, .FoggySteak85110...).
+        try {
+            return java.util.UUID.fromString(input).toString();
+        } catch (IllegalArgumentException notAnUuid) {
+            for (String id : bannedUuids) {
+                String name = userdataConfig.getString("security.banned-names." + id, "");
+                if (name.equalsIgnoreCase(input)) {
+                    return id;
+                }
+            }
+            org.bukkit.OfflinePlayer known = org.bukkit.Bukkit.getOfflinePlayer(input);
+            if (known != null && known.getUniqueId() != null && userdataConfig.contains(known.getUniqueId().toString() + ".password")) {
+                return known.getUniqueId().toString();
+            }
+            return null;
+        }
+    }
+
+    // Audit des hachages legacy (SHA-256 nu sans sel)
+
+    /** Liste les comptes encore en SHA-256 nu : a vider par les logins ou /auth security rehash. */
+    public List<String> auditLegacyHashes() {
+        List<String> out = new ArrayList<>();
+        for (String key : userdataConfig.getKeys(false)) {
+            if ("security".equals(key) || "config".equals(key) || "whitelist".equals(key)) {
+                continue;
+            }
+            String stored = userdataConfig.getString(key + ".password");
+            if (PasswordHasher.needsUpgrade(stored)) {
+                String name = userdataConfig.getString("security.banned-names." + key.toLowerCase(), "");
+                if (name.isEmpty()) {
+                    name = org.bukkit.Bukkit.getOfflinePlayer(java.util.UUID.fromString(key)).getName();
+                }
+                out.add((name != null && !name.isEmpty() ? name : key) + " (" + key + ")");
+            }
+        }
+        return out;
     }
 
     public int getMaxBlocksBeforeBan() {

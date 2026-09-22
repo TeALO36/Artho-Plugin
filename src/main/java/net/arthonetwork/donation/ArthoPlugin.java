@@ -23,6 +23,7 @@ import net.arthonetwork.donation.tasks.TabListUpdateTask;
 import net.arthonetwork.donation.utils.AccountLinkService;
 import net.arthonetwork.donation.utils.ArthoTabCompleter;
 import net.arthonetwork.donation.utils.AuthManager;
+import net.arthonetwork.donation.utils.InviteCodeManager;
 import net.arthonetwork.donation.utils.FloodgateLinkBridge;
 import net.arthonetwork.donation.utils.HomeManager;
 import net.arthonetwork.donation.utils.LinkManager;
@@ -62,6 +63,7 @@ public class ArthoPlugin extends JavaPlugin {
     private BukkitRunnable task;
     private SuggestionManager suggestionManager;
     private AuthManager authManager;
+    private InviteCodeManager inviteCodes;
     private LinkManager linkManager;
     private FloodgateLinkBridge linkBridge;
     private AccountLinkService linkService;
@@ -83,6 +85,7 @@ public class ArthoPlugin extends JavaPlugin {
 
         suggestionManager = new SuggestionManager(this);
         authManager = new AuthManager(this);
+        inviteCodes = new InviteCodeManager(this);
         linkManager = new LinkManager(this);
         teleportManager = new TeleportManager(this);
         homeManager = new HomeManager(this, teleportManager);
@@ -113,7 +116,7 @@ public class ArthoPlugin extends JavaPlugin {
         getCommand("artho").setExecutor(arthoCmd);
         getCommand("arthonetwork").setExecutor(arthoCmd);
 
-        AuthCommands authCmd = new AuthCommands(this, authManager);
+        AuthCommands authCmd = new AuthCommands(this, authManager, inviteCodes);
         getCommand("register").setExecutor(authCmd);
         getCommand("login").setExecutor(authCmd);
         getCommand("auth").setExecutor(authCmd);
@@ -160,7 +163,7 @@ public class ArthoPlugin extends JavaPlugin {
 
         // Register events
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(), this);
-        getServer().getPluginManager().registerEvents(new AuthListener(this, authManager), this);
+        getServer().getPluginManager().registerEvents(new AuthListener(this, authManager, inviteCodes), this);
         getServer().getPluginManager().registerEvents(
                 new BedrockAutoLoginListener(this, authManager, linkManager, linkBridge), this);
         // After AuthListener: it must have the chance to stop a player who is not logged in first.

@@ -21,7 +21,7 @@ commands:
     usage: /suggestion <ajouter|voir|supprimer>
   register:
     description: S'inscrire
-    usage: /register <password> <confirm>
+    usage: /register <code> <password> <confirm>
   login:
     description: Se connecter
     usage: /login <password>

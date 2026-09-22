@@ -2,6 +2,7 @@ package net.arthonetwork.donation.listeners;
 
 import net.arthonetwork.donation.ArthoPlugin;
 import net.arthonetwork.donation.utils.AuthManager;
+import net.arthonetwork.donation.utils.InviteCodeManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,14 +17,25 @@ public class AuthListener implements Listener {
 
     private final ArthoPlugin plugin;
     private final AuthManager authManager;
+    private final InviteCodeManager inviteCodes;
 
-    public AuthListener(ArthoPlugin plugin, AuthManager authManager) {
+    public AuthListener(ArthoPlugin plugin, AuthManager authManager, InviteCodeManager inviteCodes) {
         this.plugin = plugin;
         this.authManager = authManager;
+        this.inviteCodes = inviteCodes;
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onLogin(PlayerLoginEvent event) {
+        // Ban de compte (plugin) : rejete avant tout, meme avant la page de login.
+        // Un ban IP seul ne suffit pas en mode crack : l intrus change de VPN mais
+        // garde l identite volee ; ici c est le compte lui-meme qui est ferme.
+        if (authManager.isUuidBanned(event.getPlayer().getUniqueId())) {
+            event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
+                    org.bukkit.ChatColor.RED + "Votre compte a été banni par un administrateur.");
+            return;
+        }
+
         String ip = event.getAddress() != null ? event.getAddress().getHostAddress() : null;
         if (ip != null && authManager.isIpBanned(ip)) {
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED,
